@@ -1,20 +1,20 @@
 {
-  "name": "doofTrack Manhwa Tracker",
-  "short_name": "doofTrack",
+  "name": "dooF-_-Track",
+  "short_name": "dooF-_-Track",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#020817",
-  "theme_color": "#020817",
+  "theme_color": "#7c3aed",
   "description": "Track your manhwa reading progress.",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2232/2232688.png",
+      "src": "/favicon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2232/2232688.png",
+      "src": "/logo-dark.png",
       "sizes": "512x512",
       "type": "image/png"
     }

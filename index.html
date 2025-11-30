@@ -114,6 +114,10 @@
 <link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-background text-foreground antialiased min-h-screen transition-colors duration-300">
+    <!-- In-app splash while JS loads -->
+    <div id="app-splash" style="position:fixed;inset:0;background:#020817;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s ease;">
+      <img src="/logo-dark.png" alt="dooF-_-Track" style="width:128px;height:auto;opacity:.95;"/>
+    </div>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

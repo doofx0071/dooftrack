@@ -1,0 +1,5 @@
+{
+  "name": "doofTrack",
+  "description": "A modern, dark-mode manhwa tracking application with library management and MangaDex integration.",
+  "requestFramePermissions": []
+}

@@ -1,7 +1,9 @@
 import { MangaDexResult, Manhwa } from '../types';
 
-const BASE_URL = 'https://api.mangadex.org';
-const COVER_URL = 'https://uploads.mangadex.org/covers';
+const isBrowser = typeof window !== 'undefined';
+const useProxy = isBrowser && !location.hostname.includes('localhost');
+const BASE_URL = useProxy ? '/api/mangadex' : 'https://api.mangadex.org';
+const COVER_URL = useProxy ? '/api/cover' : 'https://uploads.mangadex.org/covers';
 
 // Rate limiting helper
 let lastRequestTime = 0;
@@ -16,7 +18,8 @@ const rateLimitedFetch = async (url: string, options?: RequestInit): Promise<Res
   }
   
   lastRequestTime = Date.now();
-  return fetch(url, options);
+  const fetchUrl = url.startsWith('http') ? url : `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  return fetch(fetchUrl, options);
 };
 
 // Extract title from localized string object
@@ -32,6 +35,9 @@ const extractDescription = (descObj: Record<string, string> | undefined): string
 
 // Build cover URL with proper size
 const buildCoverUrl = (mangaId: string, fileName: string, size: '256' | '512' | 'original' = '256'): string => {
+  if (useProxy) {
+    return `${COVER_URL}/${mangaId}/${fileName}?s=${size}`;
+  }
   if (size === 'original') {
     return `${COVER_URL}/${mangaId}/${fileName}`;
   }
@@ -98,7 +104,7 @@ export const searchMangaDex = async (query: string, options: SearchOptions = {})
       params.append(`order[${key}]`, value);
     });
 
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
@@ -145,7 +151,7 @@ export const getMangaById = async (mangaId: string): Promise<Manhwa | null> => {
     params.append('includes[]', 'author');
     params.append('includes[]', 'artist');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga/${mangaId}?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga/${mangaId}?${params.toString()}`);
     
     if (!response.ok) {
       if (response.status === 404) return null;
@@ -207,7 +213,7 @@ export const getMangaFeed = async (
     });
     
     const response = await rateLimitedFetch(
-      `${BASE_URL}/manga/${mangaId}/feed?${params.toString()}`
+      `/manga/${mangaId}/feed?${params.toString()}`
     );
     
     if (!response.ok) {
@@ -227,7 +233,7 @@ export const getLastChapterNumber = async (mangaId: string): Promise<number | nu
   try {
     // Use aggregate endpoint to get chapter statistics
     const response = await rateLimitedFetch(
-      `${BASE_URL}/manga/${mangaId}/aggregate?translatedLanguage[]=en`
+      `/manga/${mangaId}/aggregate?translatedLanguage[]=en`
     );
     
     if (!response.ok) {
@@ -264,7 +270,7 @@ export const getLastChapterNumber = async (mangaId: string): Promise<number | nu
 // Get all available tags
 export const getTags = async () => {
   try {
-    const response = await rateLimitedFetch(`${BASE_URL}/manga/tag`);
+    const response = await rateLimitedFetch(`/manga/tag`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch tags: ${response.status}`);
@@ -292,7 +298,7 @@ export const getRandomManga = async (): Promise<Manhwa | null> => {
     params.append('contentRating[]', 'safe');
     params.append('contentRating[]', 'suggestive');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga/random?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga/random?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch random manga: ${response.status}`);
@@ -329,7 +335,7 @@ export const getRelatedManga = async (mangaId: string, limit: number = 10): Prom
     params.append('includes[]', 'artist');
     
     // Fetch the manga with relationships to find related works
-    const response = await rateLimitedFetch(`${BASE_URL}/manga/${mangaId}?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga/${mangaId}?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch manga details: ${response.status}`);
@@ -399,7 +405,7 @@ export const getRecentlyUpdated = async (limit: number = 10): Promise<Manhwa[]> 
     params.append('order[latestUploadedChapter]', 'desc');
     params.append('hasAvailableChapters', 'true');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch recently updated: ${response.status}`);
@@ -439,7 +445,7 @@ export const getPopularManga = async (limit: number = 10): Promise<Manhwa[]> => 
     params.append('order[followedCount]', 'desc');
     params.append('hasAvailableChapters', 'true');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch popular manga: ${response.status}`);
@@ -480,7 +486,7 @@ export const getCompletedManga = async (limit: number = 10): Promise<Manhwa[]> =
     params.append('order[followedCount]', 'desc');
     params.append('hasAvailableChapters', 'true');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch completed manga: ${response.status}`);
@@ -520,7 +526,7 @@ export const getNewlyAdded = async (limit: number = 10): Promise<Manhwa[]> => {
     params.append('order[createdAt]', 'desc');
     params.append('hasAvailableChapters', 'true');
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch newly added: ${response.status}`);

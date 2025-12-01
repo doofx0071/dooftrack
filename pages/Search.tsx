@@ -301,10 +301,12 @@ export default function Search() {
         </p>
       </div>
 
-      <form onSubmit={handleSearch} className="flex w-full max-w-2xl mx-auto items-center space-x-2">
+      <form onSubmit={handleSearch} className="flex w-full max-w-2xl mx-auto items-center space-x-2" aria-label="Search form">
         <div className="relative flex-1" ref={searchContainerRef}>
-          <SearchIcon className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground z-10" />
+          <label htmlFor="search-input" className="sr-only">Search titles</label>
+          <SearchIcon className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground z-10" aria-hidden="true" />
           <Input
+            id="search-input"
             ref={inputRef}
             value={query}
             onChange={handleInputChange}
@@ -312,6 +314,7 @@ export default function Search() {
             onKeyDown={handleKeyDown}
             placeholder="Search by title..."
             className="pl-10 h-12 text-lg font-medium"
+            aria-label="Search titles"
             autoComplete="off"
           />
           

@@ -1,6 +1,19 @@
 import { Manhwa, ReadingStatus, UserProgress, LibraryItem, UserProfile, UserStats } from '../types';
 import { supabase } from './supabase';
 
+// Replace uploads.mangadex.org cover URLs with our proxy in production
+const proxifyCoverUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  try {
+    if (typeof window !== 'undefined' && !location.hostname.includes('localhost')) {
+      return url.replace('https://uploads.mangadex.org/covers', '/api/cover');
+    }
+    return url;
+  } catch {
+    return url || '';
+  }
+};
+
 // Cache user ID to avoid repeated slow auth calls
 let cachedUserId: string | null = null;
 let userIdPromise: Promise<string | null> | null = null;
@@ -69,7 +82,7 @@ export const getLibrary = async (): Promise<LibraryItem[]> => {
       return {
         id: m.id,
         title: m.title,
-        cover_url: m.cover_url || '',
+        cover_url: proxifyCoverUrl(m.cover_url) || '',
         description: m.description || '',
         source_id: m.source_id,
         created_at: m.created_at,
@@ -116,7 +129,7 @@ export const getRecentlyUpdated = async (limit: number = 10): Promise<LibraryIte
     return (progressList || []).map((p: any) => ({
       id: p.manhwa.id,
       title: p.manhwa.title,
-      cover_url: p.manhwa.cover_url || '',
+      cover_url: proxifyCoverUrl(p.manhwa.cover_url) || '',
       description: p.manhwa.description || '',
       source_id: p.manhwa.source_id,
       created_at: p.manhwa.created_at,
@@ -322,7 +335,7 @@ export const getManhwaDetails = async (id: string): Promise<LibraryItem | null> 
     return {
       id: m.id,
       title: m.title,
-      cover_url: m.cover_url || '',
+      cover_url: proxifyCoverUrl(m.cover_url) || '',
       description: m.description || '',
       source_id: m.source_id,
       created_at: m.created_at,

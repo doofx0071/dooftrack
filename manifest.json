@@ -1,6 +1,7 @@
 {
   "name": "dooF-_-Track",
   "short_name": "dooF-_-Track",
+  "id": "/assets/",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#020817",

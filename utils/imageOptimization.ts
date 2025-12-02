@@ -49,6 +49,9 @@ export function buildOptimizedCoverUrl(
     path = match ? match[1] : coverUrl;
   } else if (coverUrl.startsWith('/covers/')) {
     path = coverUrl.replace('/covers/', '');
+  } else if (coverUrl.startsWith('/api/cover/')) {
+    // URL already includes /api/cover/, extract just the path
+    path = coverUrl.replace('/api/cover/', '');
   }
 
   // Build query params for optimization hints

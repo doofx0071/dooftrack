@@ -4,7 +4,9 @@ import {
   getUserProfile, 
   getUserStatistics, 
   getTopRated,
-  updateUserPassword 
+  updateUserPassword,
+  exportLibraryAsJSON,
+  exportLibraryAsCSV
 } from "../services/store";
 import { UserProfile, UserStats, ManhwaItem } from "../types";
 import { Link } from "react-router-dom";
@@ -24,7 +26,8 @@ import {
   Sun,
   Moon,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from "lucide-react";
 
 export default function Account() {
@@ -50,6 +53,9 @@ export default function Account() {
   
   // Sign out confirmation modal
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  
+  // Export state
+  const [exportLoading, setExportLoading] = useState<'json' | 'csv' | null>(null);
 
   useEffect(() => {
     loadAccountData();
@@ -139,6 +145,50 @@ export default function Account() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setShowSignOutModal(false);
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      setExportLoading('json');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const blob = await exportLibraryAsJSON(user.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dooftrack-library-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting JSON:', error);
+    } finally {
+      setExportLoading(null);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      setExportLoading('csv');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const blob = await exportLibraryAsCSV(user.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dooftrack-library-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+    } finally {
+      setExportLoading(null);
+    }
   };
 
   if (loading) {
@@ -373,6 +423,39 @@ export default function Account() {
               color="teal"
               suffix="%"
             />
+          </div>
+        </div>
+
+        {/* Data Export Section */}
+        <div>
+          <h2 className="font-heading text-2xl font-bold mb-4">Data Export</h2>
+          <div className="border border-border/50 rounded-lg p-6 bg-card/40">
+            <p className="text-muted-foreground mb-4">
+              Export your library data for backup or to use in other applications.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleExportJSON}
+                disabled={exportLoading !== null}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground 
+                         rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                {exportLoading === 'json' ? 'Exporting...' : 'Export as JSON'}
+              </button>
+              <button
+                onClick={handleExportCSV}
+                disabled={exportLoading !== null}
+                className="flex items-center justify-center gap-2 px-6 py-3 border border-border/50 
+                         rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                {exportLoading === 'csv' ? 'Exporting...' : 'Export as CSV'}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              JSON format preserves all data including descriptions. CSV format is compatible with spreadsheet applications.
+            </p>
           </div>
         </div>
 

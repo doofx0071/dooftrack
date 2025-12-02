@@ -392,6 +392,46 @@ export const removeFromLibrary = async (id: string): Promise<void> => {
   }
 };
 
+/**
+ * Export library data as JSON
+ */
+export const exportLibraryAsJSON = async (): Promise<Blob> => {
+  const library = await getLibrary();
+  const exportData = {
+    exportDate: new Date().toISOString(),
+    version: '1.0',
+    library
+  };
+  
+  const json = JSON.stringify(exportData, null, 2);
+  return new Blob([json], { type: 'application/json' });
+};
+
+/**
+ * Export library data as CSV
+ */
+export const exportLibraryAsCSV = async (): Promise<Blob> => {
+  const library = await getLibrary();
+  
+  // CSV headers
+  const headers = ['Title', 'Status', 'Last Chapter', 'Rating', 'Notes', 'Source ID', 'Created At', 'Updated At'];
+  
+  // CSV rows
+  const rows = library.map(item => [
+    `"${item.title.replace(/"/g, '""')}"`, // Escape quotes
+    item.progress?.status || 'Plan to Read',
+    item.progress?.last_chapter || 0,
+    item.progress?.rating || 0,
+    `"${(item.progress?.notes || '').replace(/"/g, '""')}"`,
+    item.source_id,
+    new Date(item.created_at).toLocaleDateString(),
+    item.progress?.updated_at ? new Date(item.progress.updated_at).toLocaleDateString() : ''
+  ].join(','));
+  
+  const csv = [headers.join(','), ...rows].join('\n');
+  return new Blob([csv], { type: 'text/csv' });
+};
+
 // Account Page Functions
 
 export const getUserProfile = async (): Promise<UserProfile | null> => {

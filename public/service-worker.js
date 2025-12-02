@@ -90,8 +90,10 @@ self.addEventListener('fetch', (event) => {
         .then((networkResponse) => {
           // Cache successful responses for 5 minutes
           if (networkResponse && networkResponse.status === 200) {
+            // Clone the response BEFORE returning it
+            const responseToCache = networkResponse.clone();
             caches.open(API_CACHE).then((cache) => {
-              cache.put(request, networkResponse.clone());
+              cache.put(request, responseToCache);
             });
           }
           return networkResponse;
@@ -149,8 +151,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
+          // Clone the response BEFORE using it
+          const responseToCache = networkResponse.clone();
           return caches.open(STATIC_CACHE).then((cache) => {
-            cache.put(request, networkResponse.clone());
+            cache.put(request, responseToCache);
             return networkResponse;
           });
         })

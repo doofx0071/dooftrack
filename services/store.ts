@@ -239,6 +239,14 @@ export const addToLibrary = async (manhwa: Manhwa, status: ReadingStatus = Readi
   }
 };
 
+/**
+ * Quick action: Add to library and set status to Reading in one click
+ * Returns the database ID of the manhwa after adding
+ */
+export const quickStartReading = async (manhwa: Manhwa): Promise<string> => {
+  return addToLibrary(manhwa, ReadingStatus.READING);
+};
+
 // Get manhwa by source_id (MangaDex ID) - returns database ID if found
 export const getManhwaIdBySourceId = async (sourceId: string): Promise<string | null> => {
   try {

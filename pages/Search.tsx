@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search as SearchIcon, Plus, Loader2, Check, Filter, X, Shuffle, TrendingUp, Clock, CheckCircle, Sparkles, History, Trash2 } from 'lucide-react';
 import { Input, Button, Card, cn } from '../components/Common';
 import { searchMangaDex, SearchOptions, getRandomManga, getRecentlyUpdated, getPopularManga, getCompletedManga, getNewlyAdded } from '../services/mangadex';
-import { addToLibrary, getLibrary } from '../services/store';
+import { addToLibrary, quickStartReading, getLibrary } from '../services/store';
 import { Manhwa } from '../types';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
+import { useToast } from '../components/Toast';
+import { BookOpen } from 'lucide-react';
 
 // Debounce hook for search suggestions
 function useDebounce<T>(value: T, delay: number): T {
@@ -42,6 +44,7 @@ interface SearchHistoryItem {
 export default function Search() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Manhwa[]>([]);
@@ -371,6 +374,27 @@ export default function Search() {
     }
   };
   
+  const handleStartReading = async (manhwa: Manhwa, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    
+    // Optimistic UI update
+    setLibraryIds(prev => new Set(prev).add(manhwa.id));
+    
+    try {
+      await quickStartReading(manhwa);
+      showToast(`Started reading "${manhwa.title}"`, 'success');
+    } catch (error) {
+      console.error('Failed to start reading:', error);
+      showToast('Failed to add to library', 'error');
+      // Rollback
+      setLibraryIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(manhwa.id);
+        return newSet;
+      });
+    }
+  };
+  
   const handleNavigateToManhwa = (manga: Manhwa) => {
     // Navigate to Details page using source_id (MangaDex ID)
     // Details page will handle both library items and preview mode
@@ -628,17 +652,29 @@ export default function Search() {
                   height="450"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
-                  <Button 
-                    className={cn("w-full gap-2 font-medium", isAdded ? "bg-green-600 hover:bg-green-700" : "")}
-                    onClick={(e) => !isAdded && handleAdd(manga, e)}
-                    disabled={isAdded}
-                  >
-                    {isAdded ? (
-                      <><Check className="w-4 h-4" /> Added</>
-                    ) : (
-                      <><Plus className="w-4 h-4" /> Add to Library</>
-                    )}
-                  </Button>
+                  {isAdded ? (
+                    <Button 
+                      className="w-full gap-2 font-medium bg-green-600 hover:bg-green-700"
+                      disabled
+                    >
+                      <Check className="w-4 h-4" /> Added
+                    </Button>
+                  ) : (
+                    <div className="w-full flex gap-2">
+                      <Button 
+                        className="flex-1 gap-1 font-medium text-xs"
+                        onClick={(e) => handleAdd(manga, e)}
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </Button>
+                      <Button 
+                        className="flex-1 gap-1 font-medium bg-indigo-600 hover:bg-indigo-700 text-xs"
+                        onClick={(e) => handleStartReading(manga, e)}
+                      >
+                        <BookOpen className="w-3 h-3" /> Start Reading
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="p-4 space-y-2">

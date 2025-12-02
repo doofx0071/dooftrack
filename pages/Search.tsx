@@ -478,6 +478,9 @@ export default function Search() {
                   alt={manga.title}
                   className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
+                  decoding="async"
+                  width="300"
+                  height="450"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
                   <Button 
@@ -632,6 +635,8 @@ function BrowseSection({
                   alt={manga.title}
                   loading="lazy"
                   decoding="async"
+                  width="256"
+                  height="384"
                   className="w-full h-full object-cover"
                 />
                 

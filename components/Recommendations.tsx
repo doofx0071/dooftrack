@@ -140,6 +140,8 @@ export default function Recommendations({ mangaId, mangaTitle, limit = 8 }: Reco
                   alt={manga.title}
                   loading="lazy"
                   decoding="async"
+                  width="256"
+                  height="384"
                   className="w-full h-full object-cover"
                 />
                 

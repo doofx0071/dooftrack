@@ -343,8 +343,8 @@ export default function Details() {
 
                 {/* Chapter Progress */}
                 <div className="space-y-2">
-                   <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Chapter Progress</label>
-                   <div className="flex items-center gap-4 p-4 bg-secondary/20 border border-border/50" role="group" aria-label="Chapter progress controls">
+                   <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider" id="chapter-progress-label">Chapter Progress</div>
+                   <div className="flex items-center gap-4 p-4 bg-secondary/20 border border-border/50" role="group" aria-labelledby="chapter-progress-label">
                       <Button variant="outline" size="icon" onClick={() => handleChapterChange(-1)} className="h-12 w-12 border-primary/20 hover:border-primary">
                          <span className="text-2xl font-light font-heading">-</span>
                       </Button>

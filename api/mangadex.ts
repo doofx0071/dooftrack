@@ -1,13 +1,21 @@
 const ALLOWED_METHODS = ['GET', 'OPTIONS'];
 
 // Vercel Node.js runtime using the Fetch Web Standard export
-// See: https://vercel.com/docs/functions/runtimes/node-js
+// This function proxies requests to https://api.mangadex.org
+// Frontend calls /api/mangadex/<path>?<query>
+// vercel.json rewrites that to /api/mangadex?path=<path>&<query>
 export default {
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    // path after /api/mangadex/
-    const path = url.pathname.replace(/^\/api\/mangadex\//, '');
-    const target = `https://api.mangadex.org/${path}${url.search}`;
+
+    // Extract the target MangaDex path from the ?path= query param added by the rewrite
+    const searchParams = new URLSearchParams(url.search);
+    const rawPath = searchParams.get('path') || '';
+    searchParams.delete('path');
+
+    const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+    const searchString = searchParams.toString();
+    const target = `https://api.mangadex.org${normalizedPath}${searchString ? `?${searchString}` : ''}`;
 
     if (req.method === 'OPTIONS') {
       return new Response(null, {
@@ -22,11 +30,10 @@ export default {
 
     try {
       const upstream = await fetch(target, {
-        // preserve method and headers minimally
         method: 'GET',
         headers: {
-          'User-Agent': 'doofTrack/1.0 (+https://doof-track.vercel.app)'
-        }
+          'User-Agent': 'doofTrack/1.0 (+https://doof-track.vercel.app)',
+        },
       });
 
       const headers = new Headers(upstream.headers);
@@ -39,10 +46,13 @@ export default {
       const body = await upstream.arrayBuffer();
       return new Response(body, { status: upstream.status, headers });
     } catch (e: any) {
-      return new Response(JSON.stringify({ error: 'proxy_error', message: e?.message || 'fetch failed' }), {
-        status: 502,
-        headers: { 'content-type': 'application/json', ...corsHeaders() }
-      });
+      return new Response(
+        JSON.stringify({ error: 'proxy_error', message: e?.message || 'fetch failed' }),
+        {
+          status: 502,
+          headers: { 'content-type': 'application/json', ...corsHeaders() },
+        },
+      );
     }
   },
 };
@@ -51,6 +61,6 @@ function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': '*'
+    'Access-Control-Allow-Headers': '*',
   };
 }

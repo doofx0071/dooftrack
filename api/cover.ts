@@ -1,15 +1,24 @@
 const ALLOWED_METHODS = ['GET', 'OPTIONS'];
 
 // Vercel Node.js runtime using the Fetch Web Standard export
+// This function proxies cover images from https://uploads.mangadex.org/covers
+// Frontend calls /api/cover/<mangaId>/<fileName>?s=256|512|original
+// vercel.json rewrites that to /api/cover?path=<mangaId>/<fileName>&s=...
 export default {
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    const path = url.pathname.replace(/^\/api\/cover\//, '');
-    // Allow optional size query (?s=256|512|original)
-    const size = url.searchParams.get('s') || '';
-    // Path expected: {mangaId}/{fileName}
+
+    const searchParams = new URLSearchParams(url.search);
+    const rawPath = searchParams.get('path') || '';
+    searchParams.delete('path');
+
+    const size = searchParams.get('s') || '';
+    // We don't forward "s" as a query param to MangaDex, it's encoded into the filename
+    searchParams.delete('s');
+
+    const normalizedPath = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath; // no leading slash for covers base
     const targetBase = 'https://uploads.mangadex.org/covers/';
-    const target = `${targetBase}${path}${size && size !== 'original' ? `.${size}.jpg` : ''}`;
+    const target = `${targetBase}${normalizedPath}${size && size !== 'original' ? `.${size}.jpg` : ''}`;
 
     if (req.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders() });
@@ -23,14 +32,17 @@ export default {
       const upstream = await fetch(target, {
         method: 'GET',
         // Set a referer accepted by MD to avoid anti-hotlink image
-        headers: { Referer: 'https://mangadex.org/' }
+        headers: { Referer: 'https://mangadex.org/' },
       });
 
       const headers = new Headers(upstream.headers);
       headers.set('Access-Control-Allow-Origin', '*');
       headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
       headers.set('Access-Control-Allow-Headers', '*');
-      headers.set('Cache-Control', headers.get('Cache-Control') || 's-maxage=86400, stale-while-revalidate=31536000');
+      headers.set(
+        'Cache-Control',
+        headers.get('Cache-Control') || 's-maxage=86400, stale-while-revalidate=31536000',
+      );
 
       const body = await upstream.arrayBuffer();
       return new Response(body, { status: upstream.status, headers });
@@ -44,6 +56,6 @@ function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': '*'
+    'Access-Control-Allow-Headers': '*',
   };
 }

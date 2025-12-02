@@ -479,6 +479,11 @@ export default function Account() {
                         loading="lazy"
                         decoding="async"
                         className="object-cover w-full h-full"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"%3E%3Crect width="400" height="600" fill="%23374151"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239CA3AF" font-family="system-ui" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
                       />
                       {manhwa.progress?.rating && manhwa.progress.rating > 0 && (
                         <div className="absolute top-2 right-2">

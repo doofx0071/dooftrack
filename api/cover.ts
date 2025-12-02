@@ -12,13 +12,10 @@ export default {
     const rawPath = searchParams.get('path') || '';
     searchParams.delete('path');
 
-    const size = searchParams.get('s') || '';
-    // We don't forward "s" as a query param to MangaDex, it's encoded into the filename
-    searchParams.delete('s');
-
     const normalizedPath = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath; // no leading slash for covers base
     const targetBase = 'https://uploads.mangadex.org/covers/';
-    const target = `${targetBase}${normalizedPath}${size && size !== 'original' ? `.${size}.jpg` : ''}`;
+    // Always fetch the original cover path; browser will handle sizing.
+    const target = `${targetBase}${normalizedPath}`;
 
     if (req.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders() });

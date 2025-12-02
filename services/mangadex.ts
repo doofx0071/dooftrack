@@ -33,15 +33,12 @@ const extractDescription = (descObj: Record<string, string> | undefined): string
   return descObj.en || Object.values(descObj)[0] || 'No description available.';
 };
 
-// Build cover URL with proper size
-const buildCoverUrl = (mangaId: string, fileName: string, size: '256' | '512' | 'original' = '256'): string => {
-  if (useProxy) {
-    return `${COVER_URL}/${mangaId}/${fileName}?s=${size}`;
-  }
-  if (size === 'original') {
-    return `${COVER_URL}/${mangaId}/${fileName}`;
-  }
-  return `${COVER_URL}/${mangaId}/${fileName}.${size}.jpg`;
+// Build cover URL. MangaDex serves the original cover at
+// https://uploads.mangadex.org/covers/{mangaId}/{fileName}
+// Sized variants (256/512) are optional, so we always use the
+// original path for maximum compatibility and let the browser scale.
+const buildCoverUrl = (mangaId: string, fileName: string, _size: '256' | '512' | 'original' = '256'): string => {
+  return `${COVER_URL}/${mangaId}/${fileName}`;
 };
 
 export interface SearchOptions {

@@ -6,6 +6,8 @@ import Details from './pages/Details';
 import Account from './pages/Account';
 import AuthModal from './components/AuthModal';
 import SignOutDialog from './components/SignOutDialog';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorFallback } from './components/ErrorFallback';
 import { LayoutGrid, Search as SearchIcon, Sun, Moon, AlertTriangle, UserCircle } from 'lucide-react';
 import { cn, Button } from './components/Common';
 import { supabase } from './services/supabase';
@@ -295,17 +297,23 @@ export default function App() {
         </div>
       )}
       
-      <Router>
-        <Layout user={user} onSignOut={handleSignOut}>
-          <Routes>
-            <Route path="/" element={<Library />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/manhwa/:id" element={<Details />} />
-            <Route path="/account" element={<Account />} />
-          </Routes>
-        </Layout>
-      </Router>
+      <ErrorBoundary 
+        fallback={(error, errorInfo, reset) => (
+          <ErrorFallback error={error} errorInfo={errorInfo} reset={reset} />
+        )}
+      >
+        <Router>
+          <Layout user={user} onSignOut={handleSignOut}>
+            <Routes>
+              <Route path="/" element={<Library />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/manhwa/:id" element={<Details />} />
+              <Route path="/account" element={<Account />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </ErrorBoundary>
     </>
   );
 }

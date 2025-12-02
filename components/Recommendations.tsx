@@ -5,6 +5,7 @@ import { addToLibrary, isInLibrary } from "../services/store";
 import { supabase } from "../services/supabase";
 import { Manhwa } from "../types";
 import { Plus, Check, Lightbulb } from "lucide-react";
+import { SkeletonCard } from "./SkeletonCard";
 
 interface RecommendationsProps {
   mangaId: string;
@@ -92,13 +93,8 @@ export default function Recommendations({ mangaId, mangaTitle, limit = 8 }: Reco
             Because you read <span className="font-medium text-foreground">{mangaTitle}</span>
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="space-y-2 animate-pulse">
-              <div className="aspect-[2/3] bg-border/20 rounded-lg" />
-              <div className="h-4 bg-border/20 rounded w-3/4" />
-            </div>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <SkeletonCard count={limit} />
         </div>
       </div>
     );

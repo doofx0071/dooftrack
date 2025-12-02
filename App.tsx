@@ -8,6 +8,8 @@ import AuthModal from './components/AuthModal';
 import SignOutDialog from './components/SignOutDialog';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ErrorFallback } from './components/ErrorFallback';
+import { OfflineBanner, ReconnectionToast } from './components/OfflineBanner';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { LayoutGrid, Search as SearchIcon, Sun, Moon, AlertTriangle, UserCircle } from 'lucide-react';
 import { cn, Button } from './components/Common';
 import { supabase } from './services/supabase';
@@ -188,6 +190,7 @@ export default function App() {
   const [loading, setLoading] = React.useState(true);
   const [sessionWarning, setSessionWarning] = React.useState(false);
   const sessionTimeoutRef = React.useRef<SessionTimeout | null>(null);
+  const isOnline = useOnlineStatus();
 
   React.useEffect(() => {
     // Check active session
@@ -260,6 +263,10 @@ export default function App() {
   return (
     <>
       {!user && <AuthModal onAuthSuccess={() => {}} />}
+      
+      {/* Offline Banner */}
+      <OfflineBanner isOffline={!isOnline} />
+      <ReconnectionToast />
       
       {/* Session Timeout Warning */}
       {sessionWarning && user && (

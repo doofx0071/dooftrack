@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search as SearchIcon, Plus, Loader2, Check, Filter, X, Shuffle, TrendingUp, Clock, CheckCircle, Sparkles } from 'lucide-react';
+import { Search as SearchIcon, Plus, Loader2, Check, Filter, X, Shuffle, TrendingUp, Clock, CheckCircle, Sparkles, History, Trash2 } from 'lucide-react';
 import { Input, Button, Card, cn } from '../components/Common';
 import { searchMangaDex, SearchOptions, getRandomManga, getRecentlyUpdated, getPopularManga, getCompletedManga, getNewlyAdded } from '../services/mangadex';
 import { addToLibrary, getLibrary } from '../services/store';
@@ -24,12 +24,19 @@ function useDebounce<T>(value: T, delay: number): T {
 
 // Store search state in sessionStorage to preserve it when navigating back
 const SEARCH_STATE_KEY = 'dooftrack_search_state';
+const SEARCH_HISTORY_KEY = 'dooftrack_search_history';
+const MAX_HISTORY_ITEMS = 10;
 
 interface SearchState {
   query: string;
   results: Manhwa[];
   filters: SearchOptions;
   showFilters: boolean;
+}
+
+interface SearchHistoryItem {
+  query: string;
+  timestamp: number;
 }
 
 export default function Search() {
@@ -72,6 +79,10 @@ export default function Search() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
+  // Search history state
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  
   // Debounce the query for autocomplete
   const debouncedQuery = useDebounce(query, 300);
 
@@ -97,7 +108,60 @@ export default function Search() {
   // Load browse data on mount
   useEffect(() => {
     loadBrowseData();
+    loadSearchHistory();
   }, []);
+  
+  // Load search history from localStorage
+  const loadSearchHistory = () => {
+    try {
+      const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+      if (history) {
+        const parsed: SearchHistoryItem[] = JSON.parse(history);
+        setSearchHistory(parsed);
+      }
+    } catch (error) {
+      console.error('Error loading search history:', error);
+    }
+  };
+  
+  // Save search to history
+  const saveToHistory = (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+    
+    try {
+      // Remove duplicates and add new search at the beginning
+      const newHistory = [
+        { query: searchQuery.trim(), timestamp: Date.now() },
+        ...searchHistory.filter(item => item.query.toLowerCase() !== searchQuery.trim().toLowerCase())
+      ].slice(0, MAX_HISTORY_ITEMS);
+      
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
+      setSearchHistory(newHistory);
+    } catch (error) {
+      console.error('Error saving search history:', error);
+    }
+  };
+  
+  // Clear all search history
+  const clearSearchHistory = () => {
+    try {
+      localStorage.removeItem(SEARCH_HISTORY_KEY);
+      setSearchHistory([]);
+    } catch (error) {
+      console.error('Error clearing search history:', error);
+    }
+  };
+  
+  // Remove single item from history
+  const removeFromHistory = (queryToRemove: string) => {
+    try {
+      const newHistory = searchHistory.filter(item => item.query !== queryToRemove);
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
+      setSearchHistory(newHistory);
+    } catch (error) {
+      console.error('Error removing from history:', error);
+    }
+  };
   
   const loadBrowseData = async () => {
     setBrowseLoading(true);
@@ -173,14 +237,32 @@ export default function Search() {
     e.preventDefault();
     if (!query.trim()) return;
     setShowSuggestions(false);
+    setShowHistory(false);
     setLoading(true);
     setHasSearched(true);
+    
+    // Save to history
+    saveToHistory(query);
+    
     try {
       const data = await searchMangaDex(query, filters);
       setResults(data);
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Execute search from history
+  const searchFromHistory = (historyQuery: string) => {
+    setQuery(historyQuery);
+    setShowHistory(false);
+    setShowSuggestions(false);
+    setLoading(true);
+    setHasSearched(true);
+    
+    searchMangaDex(historyQuery, filters)
+      .then(data => setResults(data))
+      .finally(() => setLoading(false));
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +274,10 @@ export default function Search() {
   const handleInputFocus = () => {
     if (query.trim().length >= 2) {
       setShowSuggestions(true);
+      setShowHistory(false);
+    } else if (query.trim().length === 0 && searchHistory.length > 0) {
+      setShowHistory(true);
+      setShowSuggestions(false);
     }
   };
   
@@ -318,6 +404,60 @@ export default function Search() {
             aria-label="Search titles"
             autoComplete="off"
           />
+          
+          {/* Search History Dropdown */}
+          {showHistory && searchHistory.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-secondary/20">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent Searches</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearchHistory}
+                  className="h-6 px-2 text-xs hover:text-destructive"
+                  title="Clear all history"
+                >
+                  Clear All
+                </Button>
+              </div>
+              <ul className="max-h-60 overflow-y-auto">
+                {searchHistory.map((item, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0"
+                  >
+                    <button
+                      onClick={() => searchFromHistory(item.query)}
+                      className="flex-1 text-left cursor-pointer hover:text-primary transition-colors"
+                    >
+                      <p className="text-sm font-medium">{item.query}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(item.timestamp).toLocaleDateString(undefined, { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFromHistory(item.query);
+                      }}
+                      className="p-1 hover:text-destructive transition-colors cursor-pointer"
+                      title="Remove from history"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           
           {/* Autocomplete Suggestions Dropdown */}
           {showSuggestions && query.trim().length >= 2 && (

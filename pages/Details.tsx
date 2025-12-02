@@ -8,6 +8,7 @@ import { getLastChapterNumber, getMangaById } from '../services/mangadex';
 import { debounce } from '../utils/debounce';
 import { sanitizeInput } from '../utils/sanitize';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS } from '../utils/imageOptimization';
+import { SkeletonDetails } from '../components/SkeletonDetails';
 import Recommendations from '../components/Recommendations';
 
 export default function Details() {
@@ -223,30 +224,7 @@ export default function Details() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto space-y-8 pb-10 animate-pulse">
-        <div className="h-10 w-32 bg-secondary/50"></div>
-        <div className="grid md:grid-cols-[300px_1fr] gap-8">
-          <div className="space-y-6">
-            <div className="aspect-[2/3] bg-secondary/30"></div>
-            <div className="h-32 bg-secondary/30"></div>
-            <div className="h-12 bg-secondary/30"></div>
-          </div>
-          <div className="space-y-8">
-            <div>
-              <div className="h-12 w-3/4 bg-secondary/50 mb-4"></div>
-              <div className="h-4 w-full bg-secondary/30 mb-2"></div>
-              <div className="h-4 w-full bg-secondary/30 mb-2"></div>
-              <div className="h-4 w-2/3 bg-secondary/30"></div>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="h-64 bg-secondary/30"></div>
-              <div className="h-64 bg-secondary/30"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <SkeletonDetails />;
   }
   
   if (!item) return <div className="p-20 text-center font-heading text-lg">Manhwa not found.</div>;

@@ -42,6 +42,11 @@ export default {
       headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
       headers.set('Access-Control-Allow-Headers', '*');
       headers.set('Cache-Control', headers.get('Cache-Control') || 's-maxage=600, stale-while-revalidate=86400');
+      // Avoid double-decompression issues in browsers (ERR_CONTENT_DECODING_FAILED)
+      headers.delete('content-encoding');
+      headers.delete('Content-Encoding');
+      headers.delete('content-length');
+      headers.delete('Content-Length');
 
       const body = await upstream.arrayBuffer();
       return new Response(body, { status: upstream.status, headers });

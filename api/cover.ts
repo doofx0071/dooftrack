@@ -40,6 +40,11 @@ export default {
         'Cache-Control',
         headers.get('Cache-Control') || 's-maxage=86400, stale-while-revalidate=31536000',
       );
+      // Avoid content-decoding issues in browsers
+      headers.delete('content-encoding');
+      headers.delete('Content-Encoding');
+      headers.delete('content-length');
+      headers.delete('Content-Length');
 
       const body = await upstream.arrayBuffer();
       return new Response(body, { status: upstream.status, headers });

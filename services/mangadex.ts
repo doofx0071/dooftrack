@@ -568,7 +568,7 @@ const searchBySameAuthor = async (
     params.append('contentRating[]', 'erotica');
     params.append('order[followedCount]', 'desc'); // Sort by popularity
     
-    const response = await rateLimitedFetch(`${BASE_URL}/manga?${params.toString()}`);
+    const response = await rateLimitedFetch(`/manga?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch author's manga: ${response.status}`);

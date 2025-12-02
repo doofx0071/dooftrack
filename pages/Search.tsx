@@ -5,6 +5,7 @@ import { Input, Button, Card, cn } from '../components/Common';
 import { searchMangaDex, SearchOptions, getRandomManga, getRecentlyUpdated, getPopularManga, getCompletedManga, getNewlyAdded } from '../services/mangadex';
 import { addToLibrary, getLibrary } from '../services/store';
 import { Manhwa } from '../types';
+import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
 
 // Debounce hook for search suggestions
 function useDebounce<T>(value: T, delay: number): T {
@@ -342,9 +343,11 @@ export default function Search() {
                       onMouseEnter={() => setSelectedIndex(index)}
                     >
                       <img
-                        src={manga.cover_url}
+                        src={buildOptimizedCoverUrl(manga.cover_url, { width: 128, quality: 75 })}
                         alt={manga.title}
                         className="w-10 h-14 object-cover rounded flex-shrink-0"
+                        width="40"
+                        height="56"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm line-clamp-1">{manga.title}</p>
@@ -474,7 +477,9 @@ export default function Search() {
             >
               <div className="relative aspect-[2/3] overflow-hidden">
                 <img
-                  src={manga.cover_url}
+                  src={buildOptimizedCoverUrl(manga.cover_url, IMAGE_PRESETS.card)}
+                  srcSet={buildSrcSet(manga.cover_url, [256, 384, 512], 85)}
+                  sizes={RESPONSIVE_SIZES.cardGrid}
                   alt={manga.title}
                   className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
@@ -631,7 +636,9 @@ function BrowseSection({
                             bg-card shadow-sm transition-all duration-300 
                             group-hover:shadow-lg group-hover:scale-105 group-hover:border-primary/50">
                 <img
-                  src={manga.cover_url}
+                  src={buildOptimizedCoverUrl(manga.cover_url, IMAGE_PRESETS.card)}
+                  srcSet={buildSrcSet(manga.cover_url, [192, 256, 384], 85)}
+                  sizes="(max-width: 640px) 192px, 256px"
                   alt={manga.title}
                   loading="lazy"
                   decoding="async"

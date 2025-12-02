@@ -4,6 +4,7 @@ import { getLibrary, getRecentlyUpdated } from '../services/store';
 import { LibraryItem, ReadingStatus } from '../types';
 import { Card, Badge, cn } from '../components/Common';
 import { BookOpen, Star, Clock } from 'lucide-react';
+import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
 
 export default function Library() {
   const [items, setItems] = useState<LibraryItem[]>([]);
@@ -107,11 +108,15 @@ export default function Library() {
               <Link to={`/manhwa/${item.id}`} key={`recent-${item.id}`} className="shrink-0 w-[140px] group cursor-pointer">
                  <div className="relative aspect-[2/3] overflow-hidden border border-border/50">
                     <img 
-                      src={item.cover_url} 
+                      src={buildOptimizedCoverUrl(item.cover_url, IMAGE_PRESETS.thumbnail)} 
+                      srcSet={buildSrcSet(item.cover_url, [128, 256], 80)}
+                      sizes="140px"
                       alt={item.title} 
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
+                      width="140"
+                      height="210"
                     />
                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                       <p className="text-xs font-semibold text-white line-clamp-1">{item.title}</p>
@@ -151,11 +156,15 @@ export default function Library() {
               <Card className="h-full overflow-hidden border-border/50 bg-card/40 hover:bg-card/80 transition-all hover:-translate-y-1 hover:shadow-lg">
                 <div className="relative aspect-[2/3]">
                   <img
-                    src={item.cover_url}
+                    src={buildOptimizedCoverUrl(item.cover_url, IMAGE_PRESETS.card)}
+                    srcSet={buildSrcSet(item.cover_url, [256, 384, 512], 85)}
+                    sizes={RESPONSIVE_SIZES.cardGrid}
                     alt={item.title}
                     className="object-cover w-full h-full"
                     loading="lazy"
                     decoding="async"
+                    width="256"
+                    height="384"
                   />
                   <div className="absolute top-2 right-2">
                      <Badge variant="secondary" className="bg-black/60 backdrop-blur-md text-white border-none shadow-sm font-medium">

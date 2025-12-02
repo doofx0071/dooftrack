@@ -1,20 +1,36 @@
 const ALLOWED_METHODS = ['GET', 'OPTIONS'];
 
-// Vercel Node.js runtime using the Fetch Web Standard export
-// This function proxies cover images from https://uploads.mangadex.org/covers
-// Frontend calls /api/cover/<mangaId>/<fileName>?s=256|512|original
-// vercel.json rewrites that to /api/cover?path=<mangaId>/<fileName>&s=...
+// Image optimization proxy for MangaDex cover images
+// Proxies images from https://uploads.mangadex.org/covers with optimizations:
+// - Proper caching headers for CDN and browser
+// - Size hints via query params (w=width, q=quality)
+// - Format negotiation (WebP support via Accept header)
+// - Compression hints for better bandwidth usage
+//
+// Frontend usage:
+//   /api/cover/<mangaId>/<fileName>           - Original size
+//   /api/cover/<mangaId>/<fileName>?w=512     - Hint for 512px width
+//   /api/cover/<mangaId>/<fileName>?w=256&q=80 - Hint for 256px, quality 80
+//
+// Note: MangaDex serves original images. Size/quality params are hints for 
+// client-side optimization and future server-side processing.
 export default {
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
 
     const searchParams = new URLSearchParams(url.search);
     const rawPath = searchParams.get('path') || '';
+    const width = searchParams.get('w') || searchParams.get('width');
+    const quality = searchParams.get('q') || searchParams.get('quality');
+    
     searchParams.delete('path');
+    searchParams.delete('w');
+    searchParams.delete('width');
+    searchParams.delete('q');
+    searchParams.delete('quality');
 
-    const normalizedPath = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath; // no leading slash for covers base
+    const normalizedPath = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath;
     const targetBase = 'https://uploads.mangadex.org/covers/';
-    // Always fetch the original cover path; browser will handle sizing.
     const target = `${targetBase}${normalizedPath}`;
 
     if (req.method === 'OPTIONS') {
@@ -26,21 +42,49 @@ export default {
     }
 
     try {
+      // Check if client supports WebP
+      const acceptHeader = req.headers.get('Accept') || '';
+      const supportsWebP = acceptHeader.includes('image/webp');
+
       const upstream = await fetch(target, {
         method: 'GET',
-        // Set a referer accepted by MD to avoid anti-hotlink image
-        headers: { Referer: 'https://mangadex.org/' },
+        headers: { 
+          Referer: 'https://mangadex.org/',
+          // Request WebP if client supports it
+          ...(supportsWebP && { 'Accept': 'image/webp,image/*,*/*;q=0.8' }),
+        },
       });
 
+      if (!upstream.ok) {
+        return new Response('Not Found', { 
+          status: upstream.status, 
+          headers: corsHeaders() 
+        });
+      }
+
       const headers = new Headers(upstream.headers);
+      
+      // CORS headers
       headers.set('Access-Control-Allow-Origin', '*');
       headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
       headers.set('Access-Control-Allow-Headers', '*');
-      headers.set(
-        'Cache-Control',
-        headers.get('Cache-Control') || 's-maxage=86400, stale-while-revalidate=31536000',
-      );
-      // Avoid content-decoding issues in browsers
+      
+      // Aggressive caching for images (covers don't change)
+      headers.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
+      
+      // Add optimization hints for CDN/browser
+      if (width) {
+        headers.set('X-Image-Width-Hint', width);
+      }
+      if (quality) {
+        headers.set('X-Image-Quality-Hint', quality);
+      }
+      
+      // Inform client about image optimization support
+      headers.set('Accept-CH', 'DPR, Viewport-Width, Width');
+      headers.set('Vary', 'Accept');
+      
+      // Remove problematic headers
       headers.delete('content-encoding');
       headers.delete('Content-Encoding');
       headers.delete('content-length');
@@ -49,7 +93,11 @@ export default {
       const body = await upstream.arrayBuffer();
       return new Response(body, { status: upstream.status, headers });
     } catch (e: any) {
-      return new Response('Not Found', { status: 404, headers: corsHeaders() });
+      console.error('Cover proxy error:', e);
+      return new Response('Service Unavailable', { 
+        status: 503, 
+        headers: corsHeaders() 
+      });
     }
   },
 };

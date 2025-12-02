@@ -7,6 +7,7 @@ import { ArrowLeft, Trash2, Save, BookOpen, Clock, CheckCircle, Plus } from 'luc
 import { getLastChapterNumber, getMangaById } from '../services/mangadex';
 import { debounce } from '../utils/debounce';
 import { sanitizeInput } from '../utils/sanitize';
+import { buildOptimizedCoverUrl, IMAGE_PRESETS } from '../utils/imageOptimization';
 import Recommendations from '../components/Recommendations';
 
 export default function Details() {
@@ -262,7 +263,13 @@ export default function Details() {
         <div className="space-y-6">
           <div className="max-w-[200px] mx-auto md:max-w-none md:mx-0">
              <div className="aspect-[2/3] overflow-hidden shadow-2xl border border-border/50 relative">
-               <img src={item.cover_url} alt={item.title} className="w-full h-full object-cover" />
+               <img 
+                 src={buildOptimizedCoverUrl(item.cover_url, IMAGE_PRESETS.detail)} 
+                 alt={item.title} 
+                 className="w-full h-full object-cover"
+                 width="300"
+                 height="450"
+               />
                 <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
              </div>
           </div>

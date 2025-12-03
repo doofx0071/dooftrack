@@ -274,12 +274,12 @@ export default function Goals() {
             className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm cursor-pointer"
             onClick={() => setShowCreateModal(false)}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-md p-6 bg-card border border-border rounded-lg shadow-2xl mx-4">
-            <h2 className="text-2xl font-heading font-bold mb-6">Create New Goal</h2>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-[calc(100%-2rem)] sm:w-full max-w-md p-4 sm:p-6 bg-card border border-border rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl sm:text-2xl font-heading font-bold mb-4 sm:mb-6">Create New Goal</h2>
             
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
                   Goal Period
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -288,7 +288,7 @@ export default function Goals() {
                       key={type}
                       onClick={() => setNewGoal({ ...newGoal, goal_type: type })}
                       className={cn(
-                        "px-4 py-2 rounded-lg border transition-colors capitalize cursor-pointer",
+                        "px-3 sm:px-4 py-2 text-sm rounded-lg border transition-colors capitalize cursor-pointer",
                         newGoal.goal_type === type
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -301,25 +301,25 @@ export default function Goals() {
               </div>
               
               <div>
-                <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
                   Goal Type
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'manhwa_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
+                      "px-2 sm:px-3 py-2 rounded-lg border transition-colors text-[10px] sm:text-xs cursor-pointer",
                       newGoal.target_type === 'manhwa_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
                     )}
                   >
-                    Add Manhwa
+                    Add
                   </button>
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'completed_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
+                      "px-2 sm:px-3 py-2 rounded-lg border transition-colors text-[10px] sm:text-xs cursor-pointer",
                       newGoal.target_type === 'completed_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -330,7 +330,7 @@ export default function Goals() {
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'chapter_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
+                      "px-2 sm:px-3 py-2 rounded-lg border transition-colors text-[10px] sm:text-xs cursor-pointer",
                       newGoal.target_type === 'chapter_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -342,7 +342,7 @@ export default function Goals() {
               </div>
               
               <div>
-                <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
                   Target Value
                 </label>
                 <input
@@ -350,12 +350,12 @@ export default function Goals() {
                   min="1"
                   value={newGoal.target_value}
                   onChange={(e) => setNewGoal({ ...newGoal, target_value: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
             
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
               <Button
                 variant="outline"
                 onClick={() => setShowCreateModal(false)}

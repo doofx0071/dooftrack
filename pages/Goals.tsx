@@ -2,8 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { getReadingGoals, createReadingGoal, deleteReadingGoal, getAchievements, calculateGoalProgress, updateGoalProgress, checkAchievements } from '../services/store';
 import { ReadingGoal, Achievement, GoalType, TargetType } from '../types';
 import { Button, Card, cn } from '../components/Common';
-import { Target, Trophy, Plus, Trash2, Calendar, BookOpen, TrendingUp, X } from 'lucide-react';
+import { Target, Trophy, Plus, Trash2, Calendar, BookOpen, TrendingUp, X, BookPlus, Sprout, Library, Gem, Star, CheckCircle, Medal, Crown, ScrollText, Flame, Sparkles, Zap, Award, MessageSquare, Rocket, Palette } from 'lucide-react';
 import Loader from '../components/Loader';
+
+// Icon mapping for achievements
+const iconMap: Record<string, any> = {
+  BookPlus, Sprout, Library, BookOpen, Gem,
+  Star, CheckCircle, Medal, Crown,
+  ScrollText, Flame, Sparkles, Zap,
+  Award, MessageSquare, TrendingUp,
+  Rocket, Palette
+};
 
 export default function Goals() {
   const [goals, setGoals] = useState<ReadingGoal[]>([]);
@@ -103,7 +112,7 @@ export default function Goals() {
           <h1 className="text-4xl font-heading font-bold tracking-tight">Reading Goals</h1>
           <p className="text-muted-foreground mt-2">Track your progress and unlock achievements</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+        <Button onClick={() => setShowCreateModal(true)} className="gap-2 cursor-pointer">
           <Plus className="w-4 h-4" /> New Goal
         </Button>
       </div>
@@ -119,7 +128,7 @@ export default function Goals() {
           <Card className="p-12 text-center border-dashed">
             <Target className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground mb-4">No active goals. Create one to start tracking!</p>
-            <Button onClick={() => setShowCreateModal(true)} variant="outline">
+            <Button onClick={() => setShowCreateModal(true)} variant="outline" className="cursor-pointer">
               <Plus className="w-4 h-4 mr-2" /> Create Goal
             </Button>
           </Card>
@@ -152,7 +161,7 @@ export default function Goals() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteGoal(goal.id)}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -210,7 +219,7 @@ export default function Goals() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteGoal(goal.id)}
-                      className="h-6 w-6"
+                      className="h-6 w-6 cursor-pointer"
                     >
                       <X className="w-3 h-3" />
                     </Button>
@@ -239,16 +248,21 @@ export default function Goals() {
           </Card>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {achievements.map((achievement) => (
-              <Card key={achievement.id} className="p-4 text-center space-y-2 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 border-yellow-500/20">
-                <div className="text-4xl">{achievement.icon}</div>
-                <h3 className="font-heading font-bold text-sm">{achievement.title}</h3>
-                <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {new Date(achievement.unlocked_at).toLocaleDateString()}
-                </p>
-              </Card>
-            ))}
+            {achievements.map((achievement) => {
+              const IconComponent = iconMap[achievement.icon] || Trophy;
+              return (
+                <Card key={achievement.id} className="p-4 text-center space-y-2 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 border-yellow-500/20">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center">
+                    <IconComponent className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <h3 className="font-heading font-bold text-sm">{achievement.title}</h3>
+                  <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(achievement.unlocked_at).toLocaleDateString()}
+                  </p>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -257,7 +271,7 @@ export default function Goals() {
       {showCreateModal && (
         <>
           <div
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm cursor-pointer"
             onClick={() => setShowCreateModal(false)}
           />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-md p-6 bg-card border border-border rounded-lg shadow-2xl mx-4">
@@ -274,7 +288,7 @@ export default function Goals() {
                       key={type}
                       onClick={() => setNewGoal({ ...newGoal, goal_type: type })}
                       className={cn(
-                        "px-4 py-2 rounded-lg border transition-colors capitalize",
+                        "px-4 py-2 rounded-lg border transition-colors capitalize cursor-pointer",
                         newGoal.goal_type === type
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -294,7 +308,7 @@ export default function Goals() {
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'manhwa_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs",
+                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
                       newGoal.target_type === 'manhwa_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -305,7 +319,7 @@ export default function Goals() {
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'completed_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs",
+                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
                       newGoal.target_type === 'completed_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -316,7 +330,7 @@ export default function Goals() {
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'chapter_count' })}
                     className={cn(
-                      "px-3 py-2 rounded-lg border transition-colors text-xs",
+                      "px-3 py-2 rounded-lg border transition-colors text-xs cursor-pointer",
                       newGoal.target_type === 'chapter_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
@@ -345,11 +359,11 @@ export default function Goals() {
               <Button
                 variant="outline"
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1"
+                className="flex-1 cursor-pointer"
               >
                 Cancel
               </Button>
-              <Button onClick={handleCreateGoal} className="flex-1">
+              <Button onClick={handleCreateGoal} className="flex-1 cursor-pointer">
                 Create Goal
               </Button>
             </div>

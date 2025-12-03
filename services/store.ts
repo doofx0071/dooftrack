@@ -758,37 +758,37 @@ export const checkAchievements = async (): Promise<Achievement[]> => {
     const stats = await getUserStatistics();
     const library = await getLibrary();
     
-    // Define achievement conditions
+    // Define achievement conditions (icon is Lucide icon name)
     const achievementChecks = [
       // Starting achievements
-      { type: 'first_manhwa', condition: stats.totalManhwa >= 1, title: 'First Steps', description: 'Added your first manhwa', icon: '🎯' },
-      { type: 'first_complete', condition: stats.completed >= 1, title: 'Beginner', description: 'Completed your first manhwa', icon: '🌱' },
+      { type: 'first_manhwa', condition: stats.totalManhwa >= 1, title: 'First Steps', description: 'Added your first manhwa', icon: 'BookPlus' },
+      { type: 'first_complete', condition: stats.completed >= 1, title: 'Beginner', description: 'Completed your first manhwa', icon: 'Sprout' },
       
       // Collection milestones
-      { type: 'manhwa_10', condition: stats.totalManhwa >= 10, title: 'Collector', description: 'Added 10 manhwa to your library', icon: '📚' },
-      { type: 'manhwa_50', condition: stats.totalManhwa >= 50, title: 'Enthusiast', description: 'Added 50 manhwa to your library', icon: '📖' },
-      { type: 'manhwa_100', condition: stats.totalManhwa >= 100, title: 'Devotee', description: 'Added 100 manhwa to your library', icon: '💎' },
+      { type: 'manhwa_10', condition: stats.totalManhwa >= 10, title: 'Collector', description: 'Added 10 manhwa to your library', icon: 'Library' },
+      { type: 'manhwa_50', condition: stats.totalManhwa >= 50, title: 'Enthusiast', description: 'Added 50 manhwa to your library', icon: 'BookOpen' },
+      { type: 'manhwa_100', condition: stats.totalManhwa >= 100, title: 'Devotee', description: 'Added 100 manhwa to your library', icon: 'Gem' },
       
       // Completion milestones
-      { type: 'completed_5', condition: stats.completed >= 5, title: 'Committed', description: 'Completed 5 manhwa', icon: '⭐' },
-      { type: 'completed_10', condition: stats.completed >= 10, title: 'Finisher', description: 'Completed 10 manhwa', icon: '🏅' },
-      { type: 'completed_25', condition: stats.completed >= 25, title: 'Completionist', description: 'Completed 25 manhwa', icon: '🎖️' },
-      { type: 'completed_50', condition: stats.completed >= 50, title: 'Master Reader', description: 'Completed 50 manhwa', icon: '👑' },
+      { type: 'completed_5', condition: stats.completed >= 5, title: 'Committed', description: 'Completed 5 manhwa', icon: 'Star' },
+      { type: 'completed_10', condition: stats.completed >= 10, title: 'Finisher', description: 'Completed 10 manhwa', icon: 'CheckCircle' },
+      { type: 'completed_25', condition: stats.completed >= 25, title: 'Completionist', description: 'Completed 25 manhwa', icon: 'Medal' },
+      { type: 'completed_50', condition: stats.completed >= 50, title: 'Master Reader', description: 'Completed 50 manhwa', icon: 'Crown' },
       
       // Chapter milestones
-      { type: 'chapters_100', condition: stats.totalChapters >= 100, title: 'Chapter Hunter', description: 'Read 100 chapters', icon: '📄' },
-      { type: 'chapters_500', condition: stats.totalChapters >= 500, title: 'Marathon Reader', description: 'Read 500 chapters', icon: '🔥' },
-      { type: 'chapters_1000', condition: stats.totalChapters >= 1000, title: 'Legendary Reader', description: 'Read 1000 chapters', icon: '🌟' },
-      { type: 'chapters_2500', condition: stats.totalChapters >= 2500, title: 'Epic Reader', description: 'Read 2500 chapters', icon: '💫' },
+      { type: 'chapters_100', condition: stats.totalChapters >= 100, title: 'Chapter Hunter', description: 'Read 100 chapters', icon: 'ScrollText' },
+      { type: 'chapters_500', condition: stats.totalChapters >= 500, title: 'Marathon Reader', description: 'Read 500 chapters', icon: 'Flame' },
+      { type: 'chapters_1000', condition: stats.totalChapters >= 1000, title: 'Legendary Reader', description: 'Read 1000 chapters', icon: 'Sparkles' },
+      { type: 'chapters_2500', condition: stats.totalChapters >= 2500, title: 'Epic Reader', description: 'Read 2500 chapters', icon: 'Zap' },
       
       // Rating achievements
-      { type: 'perfect_10', condition: library.some(item => item.progress?.rating === 10), title: 'Perfectionist', description: 'Gave a perfect 10 rating', icon: '✨' },
-      { type: 'rated_10', condition: library.filter(item => (item.progress?.rating || 0) > 0).length >= 10, title: 'Critic', description: 'Rated 10 different manhwa', icon: '🎭' },
-      { type: 'high_standards', condition: library.filter(item => (item.progress?.rating || 0) >= 9).length >= 5, title: 'High Standards', description: 'Gave 5 manhwa a 9+ rating', icon: '🌠' },
+      { type: 'perfect_10', condition: library.some(item => item.progress?.rating === 10), title: 'Perfectionist', description: 'Gave a perfect 10 rating', icon: 'Award' },
+      { type: 'rated_10', condition: library.filter(item => (item.progress?.rating || 0) > 0).length >= 10, title: 'Critic', description: 'Rated 10 different manhwa', icon: 'MessageSquare' },
+      { type: 'high_standards', condition: library.filter(item => (item.progress?.rating || 0) >= 9).length >= 5, title: 'High Standards', description: 'Gave 5 manhwa a 9+ rating', icon: 'TrendingUp' },
       
       // Special achievements
-      { type: 'speed_reader', condition: library.filter(item => (item.progress?.last_chapter || 0) >= 50).length >= 3, title: 'Speed Reader', description: 'Read 50+ chapters in 3 manhwa', icon: '⚡' },
-      { type: 'diverse_taste', condition: stats.totalManhwa >= 20 && stats.completed >= 5, title: 'Diverse Taste', description: 'Wide reading variety', icon: '🎨' },
+      { type: 'speed_reader', condition: library.filter(item => (item.progress?.last_chapter || 0) >= 50).length >= 3, title: 'Speed Reader', description: 'Read 50+ chapters in 3 manhwa', icon: 'Rocket' },
+      { type: 'diverse_taste', condition: stats.totalManhwa >= 20 && stats.completed >= 5, title: 'Diverse Taste', description: 'Wide reading variety', icon: 'Palette' },
     ];
     
     for (const check of achievementChecks) {

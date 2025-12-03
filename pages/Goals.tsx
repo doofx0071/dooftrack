@@ -3,6 +3,7 @@ import { getReadingGoals, createReadingGoal, deleteReadingGoal, getAchievements,
 import { ReadingGoal, Achievement, GoalType, TargetType } from '../types';
 import { Button, Card, cn } from '../components/Common';
 import { Target, Trophy, Plus, Trash2, Calendar, BookOpen, TrendingUp, X } from 'lucide-react';
+import Loader from '../components/Loader';
 
 export default function Goals() {
   const [goals, setGoals] = useState<ReadingGoal[]>([]);
@@ -92,11 +93,7 @@ export default function Goals() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

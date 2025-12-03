@@ -5,6 +5,7 @@ import { LibraryItem, ReadingStatus } from '../types';
 import { Card, Badge, cn, Button } from '../components/Common';
 import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X, Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
+import Loader from '../components/Loader';
 
 export default function Library() {
   const [items, setItems] = useState<LibraryItem[]>([]);
@@ -175,31 +176,7 @@ export default function Library() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-12 animate-pulse">
-        {/* Header Skeleton */}
-        <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
-          <div>
-            <div className="h-10 w-48 bg-secondary/50 mb-2"></div>
-            <div className="h-4 w-64 bg-secondary/30"></div>
-          </div>
-          <div className="flex gap-2">
-            <div className="h-10 w-32 bg-secondary/50"></div>
-            <div className="h-10 w-32 bg-secondary/50"></div>
-          </div>
-        </div>
-        
-        {/* Grid Skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="space-y-3">
-              <div className="aspect-[2/3] bg-secondary/30"></div>
-              <div className="h-4 bg-secondary/30 w-3/4"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

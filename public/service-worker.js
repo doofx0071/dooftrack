@@ -1,7 +1,7 @@
 // doofTrack Service Worker
 // Enables offline access and intelligent caching
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `dooftrack-static-${CACHE_VERSION}`;
 const COVER_CACHE = `dooftrack-covers-${CACHE_VERSION}`;
 const API_CACHE = `dooftrack-api-${CACHE_VERSION}`;

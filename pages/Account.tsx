@@ -8,6 +8,13 @@ import {
   exportLibraryAsJSON,
   exportLibraryAsCSV
 } from "../services/store";
+import {
+  getNotificationSettings,
+  saveNotificationSettings,
+  requestNotificationPermission,
+  areNotificationsEnabled,
+  isNotificationSupported
+} from "../services/notifications";
 import { UserProfile, UserStats, ManhwaItem } from "../types";
 import { Link } from "react-router-dom";
 import StatCard from "../components/StatCard";
@@ -27,7 +34,9 @@ import {
   Moon,
   LogOut,
   AlertTriangle,
-  Download
+  Download,
+  Bell,
+  BellOff
 } from "lucide-react";
 
 export default function Account() {
@@ -56,6 +65,10 @@ export default function Account() {
   
   // Export state
   const [exportLoading, setExportLoading] = useState<'json' | 'csv' | null>(null);
+  
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState(getNotificationSettings());
+  const [notificationsPermissionGranted, setNotificationsPermissionGranted] = useState(areNotificationsEnabled());
 
   useEffect(() => {
     loadAccountData();
@@ -189,6 +202,22 @@ export default function Account() {
     } finally {
       setExportLoading(null);
     }
+  };
+  
+  const handleEnableNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      setNotificationsPermissionGranted(true);
+      const newSettings = { ...notificationSettings, enabled: true };
+      setNotificationSettings(newSettings);
+      saveNotificationSettings(newSettings);
+    }
+  };
+  
+  const handleNotificationSettingChange = (key: keyof typeof notificationSettings, value: any) => {
+    const newSettings = { ...notificationSettings, [key]: value };
+    setNotificationSettings(newSettings);
+    saveNotificationSettings(newSettings);
   };
 
   if (loading) {
@@ -381,6 +410,106 @@ export default function Account() {
           )}
         </div>
 
+        {/* Notifications Section */}
+        <div>
+          <h2 className="font-heading text-2xl font-bold mb-4">Notifications & Reminders</h2>
+          <div className="border border-border/50 rounded-lg p-6 bg-card/40 space-y-4">
+            {!isNotificationSupported() ? (
+              <p className="text-muted-foreground">
+                Notifications are not supported in your browser.
+              </p>
+            ) : !notificationsPermissionGranted ? (
+              <>
+                <p className="text-muted-foreground mb-4">
+                  Enable notifications to get reminders about your reading goals, streaks, and continue reading suggestions.
+                </p>
+                <button
+                  onClick={handleEnableNotifications}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground 
+                           rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                >
+                  <Bell className="w-4 h-4" />
+                  Enable Notifications
+                </button>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Bell className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Notifications Enabled</p>
+                      <p className="text-sm text-muted-foreground">Manage your notification preferences</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleNotificationSettingChange('enabled', !notificationSettings.enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${notificationSettings.enabled ? 'bg-primary' : 'bg-secondary'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notificationSettings.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+                
+                {notificationSettings.enabled && (
+                  <div className="space-y-3 pl-8 border-l-2 border-border/50">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Daily Reading Reminder</label>
+                      <button
+                        onClick={() => handleNotificationSettingChange('dailyReminder', !notificationSettings.dailyReminder)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${notificationSettings.dailyReminder ? 'bg-primary' : 'bg-secondary'}`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${notificationSettings.dailyReminder ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                    
+                    {notificationSettings.dailyReminder && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground">Reminder Time:</label>
+                        <input
+                          type="time"
+                          value={notificationSettings.reminderTime}
+                          onChange={(e) => handleNotificationSettingChange('reminderTime', e.target.value)}
+                          className="px-2 py-1 text-sm bg-background border border-input rounded"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Streak Reminders</label>
+                      <button
+                        onClick={() => handleNotificationSettingChange('streakReminders', !notificationSettings.streakReminders)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${notificationSettings.streakReminders ? 'bg-primary' : 'bg-secondary'}`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${notificationSettings.streakReminders ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Goal Milestones</label>
+                      <button
+                        onClick={() => handleNotificationSettingChange('goalMilestones', !notificationSettings.goalMilestones)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${notificationSettings.goalMilestones ? 'bg-primary' : 'bg-secondary'}`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${notificationSettings.goalMilestones ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Continue Reading Suggestions</label>
+                      <button
+                        onClick={() => handleNotificationSettingChange('continueReadingSuggestions', !notificationSettings.continueReadingSuggestions)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${notificationSettings.continueReadingSuggestions ? 'bg-primary' : 'bg-secondary'}`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${notificationSettings.continueReadingSuggestions ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        
         {/* Statistics Grid */}
         <div>
           <h2 className="font-heading text-2xl font-bold mb-4">Statistics</h2>

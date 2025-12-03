@@ -28,7 +28,7 @@ function NavItem({ to, icon: Icon, label }: { to: string, icon: any, label: stri
         "flex items-center gap-2 px-4 py-2 transition-all duration-300 border-b-2 text-base font-medium cursor-pointer rounded-t",
         isActive 
           ? "border-primary text-primary bg-primary/10" 
-          : "border-transparent text-muted-foreground hover:bg-secondary/30 hover:text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground"
       )}
     >
       <Icon className={cn("w-4 h-4", isActive && "fill-current")} />

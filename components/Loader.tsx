@@ -3,50 +3,28 @@ import React from 'react';
 const Loader = () => {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="relative">
-        <svg 
-          className="logo-animated" 
-          width={120} 
-          height={120} 
-          viewBox="0 0 512 512" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect width="512" height="512" fill="none"/>
-          <path 
-            d="M157.666 409.334L157.666 353.959L157.666 324.042L157.666 268.667L157.666 238.75L157.666 183.375L157.666 153.458L157.666 102.666L213.041 102.666L213.041 153.458L213.041 183.375L213.041 238.75L213.041 268.667L213.041 324.042L213.041 353.959L213.041 409.334L157.666 409.334ZM102.291 409.334L102.291 268.667L102.291 153.458L102.291 102.666L157.666 102.666L157.666 153.458L157.666 268.667L157.666 409.334L102.291 409.334Z" 
-            className="logo-path"
-          />
-          <path 
-            d="M298.792 409.334L298.792 353.959L298.792 324.042L298.792 268.667L298.792 238.75L298.792 183.375L298.792 153.458L298.792 102.666L354.167 102.666L354.167 153.458L354.167 183.375L354.167 238.75L354.167 268.667L354.167 324.042L354.167 353.959L354.167 409.334L298.792 409.334ZM243.417 409.334L243.417 268.667L243.417 153.458L243.417 102.666L298.792 102.666L298.792 153.458L298.792 268.667L298.792 409.334L243.417 409.334Z" 
-            className="logo-path"
-          />
-          <path 
-            d="M409.542 268.667L409.542 153.458L409.542 102.666L354.167 102.666L354.167 153.458L354.167 268.667L409.542 268.667Z" 
-            className="logo-path"
-          />
-        </svg>
-      </div>
+      <div className="loader" />
       <style>{`
-        .logo-animated {
-          overflow: visible;
+        .loader {
+          width: 60px;
+          aspect-ratio: 2;
+          --_g: no-repeat radial-gradient(circle closest-side, hsl(var(--primary)) 90%, transparent);
+          background: var(--_g) 0% 50%, var(--_g) 50% 50%, var(--_g) 100% 50%;
+          background-size: calc(100% / 3) 50%;
+          animation: l3 1s infinite linear;
         }
-
-        .logo-path {
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 8px;
-          stroke-dasharray: 20px;
-          stroke-dashoffset: 0px;
-          animation: load-stroke 15s infinite linear;
-        }
-
-        @keyframes load-stroke {
-          from {
-            stroke-dashoffset: 0px;
+        @keyframes l3 {
+          20% {
+            background-position: 0% 0%, 50% 50%, 100% 50%;
           }
-          to {
-            stroke-dashoffset: 200px;
+          40% {
+            background-position: 0% 100%, 50% 0%, 100% 50%;
+          }
+          60% {
+            background-position: 0% 50%, 50% 100%, 100% 0%;
+          }
+          80% {
+            background-position: 0% 50%, 50% 50%, 100% 100%;
           }
         }
       `}</style>

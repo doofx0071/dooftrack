@@ -52,7 +52,7 @@ function MobileNavItem({ to, icon: Icon, label }: { to: string, icon: any, label
           : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className="w-6 h-6" />
+      <Icon className={cn("w-6 h-6", isActive && "fill-current")} />
       <span className="text-xs font-medium">{label}</span>
     </Link>
   );

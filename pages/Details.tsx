@@ -167,7 +167,8 @@ export default function Details() {
         cover_url: item.cover_url,
         description: item.description,
         source_id: item.source_id,
-        created_at: item.created_at
+        created_at: item.created_at,
+        lastChapter: item.lastChapter || totalChapters || undefined
       });
       
       setIsInLibrary(true);
@@ -371,7 +372,7 @@ export default function Details() {
                             </div>
                          )}
                          <div className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold mt-1">
-                            {isEditingChapter ? 'Press Enter to Save' : 'Chapter Read'}
+                            {isEditingChapter ? 'Press Enter to Save' : totalChapters ? `Chapter Read / ${totalChapters}` : 'Chapter Read'}
                          </div>
                       </div>
                       <Button variant="outline" size="icon" onClick={() => handleChapterChange(1)} className="h-12 w-12 border-primary/20 hover:border-primary">

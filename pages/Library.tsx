@@ -266,7 +266,9 @@ export default function Library() {
                     />
                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                       <p className="text-xs font-semibold text-white line-clamp-1">{item.title}</p>
-                      <p className="text-[10px] text-gray-300 font-medium mt-0.5">Ch. {item.progress?.last_chapter}</p>
+                      <p className="text-[10px] text-gray-300 font-medium mt-0.5">
+                        Ch. {item.progress?.last_chapter}{item.lastChapter ? `/${item.lastChapter}` : ''}
+                      </p>
                     </div>
                  </div>
               </Link>
@@ -341,7 +343,7 @@ export default function Library() {
                   
                   <div className="absolute top-2 right-2">
                      <Badge variant="secondary" className="bg-black/60 backdrop-blur-md text-white border-none shadow-sm font-medium">
-                        Ch. {item.progress?.last_chapter || 0}
+                        Ch. {item.progress?.last_chapter || 0}{item.lastChapter ? `/${item.lastChapter}` : ''}
                      </Badge>
                   </div>
                   {item.progress?.status && (

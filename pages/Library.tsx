@@ -155,23 +155,86 @@ export default function Library() {
   return (
     <div className="space-y-12">
       {/* Header & Stats */}
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-tight">My Library</h1>
-          <p className="text-muted-foreground mt-1 text-base">
-            Track your reading progress across <span className="text-foreground font-medium">{stats.total}</span> titles.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 border border-border/50">
-            <BookOpen className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-medium">{stats.reading} Reading</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-tight">My Library</h1>
+            <p className="text-muted-foreground mt-1 text-base">
+              Track your reading progress across <span className="text-foreground font-medium">{stats.total}</span> titles.
+            </p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 border border-border/50">
-            <Star className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm font-medium">{stats.completed} Completed</span>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 border border-border/50">
+              <BookOpen className="w-4 h-4 text-indigo-400" />
+              <span className="text-sm font-medium">{stats.reading} Reading</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 border border-border/50">
+              <Star className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-medium">{stats.completed} Completed</span>
+            </div>
           </div>
         </div>
+        
+        {/* Selection Mode Toggle */}
+        {filteredItems.length > 0 && (
+          <div className="flex items-center justify-between">
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              onClick={toggleSelectionMode}
+              className="gap-2 cursor-pointer"
+            >
+              {selectionMode ? <X className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+              {selectionMode ? 'Cancel Selection' : 'Select Items'}
+            </Button>
+            
+            {/* Batch Actions Toolbar */}
+            {selectionMode && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.size} selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAll}
+                  disabled={selectedIds.size === filteredItems.length}
+                  className="cursor-pointer"
+                >
+                  Select All
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={deselectAll}
+                  disabled={selectedIds.size === 0}
+                  className="cursor-pointer"
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowBulkStatusModal(true)}
+                  disabled={selectedIds.size === 0}
+                  className="gap-2 cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Change Status
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={selectedIds.size === 0}
+                  className="gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Recently Updated Section */}
@@ -234,9 +297,15 @@ export default function Library() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {filteredItems.map((item) => (
-            <Link to={`/manhwa/${item.id}`} key={item.id} className="group cursor-pointer">
-              <Card className="h-full overflow-hidden border-border/50 bg-card/40 hover:bg-card/80 transition-all hover:-translate-y-1 hover:shadow-lg">
+          {filteredItems.map((item) => {
+            const isSelected = selectedIds.has(item.id);
+            const cardContent = (
+              <Card className={cn(
+                "h-full overflow-hidden border-border/50 bg-card/40 transition-all",
+                !selectionMode && "hover:bg-card/80 hover:-translate-y-1 hover:shadow-lg",
+                selectionMode && "cursor-pointer",
+                isSelected && "ring-2 ring-primary"
+              )}>
                 <div className="relative aspect-[2/3]">
                   <img
                     src={buildOptimizedCoverUrl(item.cover_url, IMAGE_PRESETS.card)}
@@ -254,6 +323,22 @@ export default function Library() {
                       target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"%3E%3Crect width="400" height="600" fill="%23374151"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239CA3AF" font-family="system-ui" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
                     }}
                   />
+                  
+                  {/* Checkbox in selection mode */}
+                  {selectionMode && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <div className={cn(
+                        "w-6 h-6 rounded flex items-center justify-center border-2 transition-colors",
+                        isSelected 
+                          ? "bg-primary border-primary" 
+                          : "bg-black/60 border-white/50 backdrop-blur-sm"
+                      )}>
+                        {isSelected && <CheckSquare className="w-4 h-4 text-primary-foreground" />}
+                        {!isSelected && <Square className="w-4 h-4 text-white" />}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="absolute top-2 right-2">
                      <Badge variant="secondary" className="bg-black/60 backdrop-blur-md text-white border-none shadow-sm font-medium">
                         Ch. {item.progress?.last_chapter || 0}
@@ -272,13 +357,30 @@ export default function Library() {
                   )}
                 </div>
                 <div className="p-3">
-                  <h3 className="font-semibold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors font-heading">
+                  <h3 className={cn(
+                    "font-semibold text-sm line-clamp-2 leading-snug font-heading transition-colors",
+                    !selectionMode && "group-hover:text-primary"
+                  )}>
                     {item.title}
                   </h3>
                 </div>
               </Card>
-            </Link>
-          ))}
+            );
+            
+            return selectionMode ? (
+              <div
+                key={item.id}
+                onClick={() => toggleSelect(item.id)}
+                className="cursor-pointer"
+              >
+                {cardContent}
+              </div>
+            ) : (
+              <Link to={`/manhwa/${item.id}`} key={item.id} className="group cursor-pointer">
+                {cardContent}
+              </Link>
+            );
+          })}
           {filteredItems.length === 0 && (
             <div className="col-span-full py-20 text-center border-2 border-dashed border-border/50 bg-secondary/10">
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
@@ -293,6 +395,55 @@ export default function Library() {
           )}
         </div>
       </div>
+      
+      {/* Bulk Status Change Modal */}
+      {showBulkStatusModal && (
+        <>
+          <div 
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowBulkStatusModal(false)}
+          />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-md p-6 bg-card border border-border rounded-lg shadow-2xl mx-4">
+            <h2 className="text-xl font-heading font-bold mb-4">Change Status</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Change the reading status for {selectedIds.size} selected item(s)
+            </p>
+            
+            <div className="space-y-2 mb-6">
+              {Object.values(ReadingStatus).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setBulkStatus(status as ReadingStatus)}
+                  className={cn(
+                    "w-full px-4 py-3 text-left rounded-lg border transition-colors cursor-pointer",
+                    bulkStatus === status
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/40 border-border/50 hover:bg-secondary"
+                  )}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowBulkStatusModal(false)}
+                className="flex-1 cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkStatusChange}
+                className="flex-1 cursor-pointer"
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -64,7 +64,7 @@ export interface UserStats {
 }
 
 export type GoalType = 'monthly' | 'yearly' | 'custom';
-export type TargetType = 'manhwa_count' | 'chapter_count';
+export type TargetType = 'manhwa_count' | 'chapter_count' | 'completed_count';
 
 export interface ReadingGoal {
   id: string;

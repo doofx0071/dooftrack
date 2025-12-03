@@ -146,8 +146,9 @@ export default function Goals() {
                           </h3>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {goal.target_type === 'manhwa_count' ? 'Add' : 'Read'}{' '}
-                          {goal.target_value} {goal.target_type === 'manhwa_count' ? 'manhwa' : 'chapters'}
+                          {goal.target_type === 'manhwa_count' && `Add ${goal.target_value} manhwa`}
+                          {goal.target_type === 'completed_count' && `Complete ${goal.target_value} manhwa`}
+                          {goal.target_type === 'chapter_count' && `Read ${goal.target_value} chapters`}
                         </p>
                       </div>
                       <Button
@@ -205,7 +206,7 @@ export default function Goals() {
                         <TrendingUp className="w-4 h-4 text-green-500" />
                       </div>
                       <span className="font-medium text-sm">
-                        {goal.target_value} {goal.target_type === 'manhwa_count' ? 'manhwa' : 'chapters'}
+                        {goal.target_value} {goal.target_type === 'manhwa_count' ? 'manhwa added' : goal.target_type === 'completed_count' ? 'manhwa completed' : 'chapters'}
                       </span>
                     </div>
                     <Button
@@ -292,28 +293,39 @@ export default function Goals() {
                 <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
                   Goal Type
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'manhwa_count' })}
                     className={cn(
-                      "px-4 py-2 rounded-lg border transition-colors",
+                      "px-3 py-2 rounded-lg border transition-colors text-xs",
                       newGoal.target_type === 'manhwa_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
                     )}
                   >
-                    Manhwa Count
+                    Add Manhwa
+                  </button>
+                  <button
+                    onClick={() => setNewGoal({ ...newGoal, target_type: 'completed_count' })}
+                    className={cn(
+                      "px-3 py-2 rounded-lg border transition-colors text-xs",
+                      newGoal.target_type === 'completed_count'
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary/40 border-border/50 hover:bg-secondary"
+                    )}
+                  >
+                    Complete
                   </button>
                   <button
                     onClick={() => setNewGoal({ ...newGoal, target_type: 'chapter_count' })}
                     className={cn(
-                      "px-4 py-2 rounded-lg border transition-colors",
+                      "px-3 py-2 rounded-lg border transition-colors text-xs",
                       newGoal.target_type === 'chapter_count'
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary/40 border-border/50 hover:bg-secondary"
                     )}
                   >
-                    Chapter Count
+                    Chapters
                   </button>
                 </div>
               </div>

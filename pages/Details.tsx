@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getManhwaDetails, updateProgress, removeFromLibrary, addToLibrary, getManhwaIdBySourceId } from '../services/store';
 import { LibraryItem, ReadingStatus, Manhwa } from '../types';
 import { Button, Select, Card } from '../components/Common';
-import { ArrowLeft, Trash2, Save, BookOpen, Clock, CheckCircle, Plus } from 'lucide-react';
+import { ArrowLeft, Trash2, Save, BookOpen, Clock, CheckCircle, Plus, Eye, Edit, Bold, Italic, List, Heading } from 'lucide-react';
 import { getLastChapterNumber, getMangaById } from '../services/mangadex';
 import { debounce } from '../utils/debounce';
 import { sanitizeInput } from '../utils/sanitize';
@@ -26,6 +26,7 @@ export default function Details() {
   const [isInLibrary, setIsInLibrary] = useState(false);
   const [addingToLibrary, setAddingToLibrary] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [showNotesPreview, setShowNotesPreview] = useState(false);
 
   // Form State
   const [status, setStatus] = useState<ReadingStatus>(ReadingStatus.PLAN_TO_READ);
@@ -223,6 +224,44 @@ export default function Details() {
       }
     }
   };
+  
+  // Markdown formatting helpers
+  const insertFormatting = (before: string, after: string = '') => {
+    const textarea = document.getElementById('notes-textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = notes.substring(start, end);
+    const newText = notes.substring(0, start) + before + selectedText + after + notes.substring(end);
+    
+    setNotes(newText);
+    
+    // Set cursor position after formatting
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+    }, 0);
+  };
+  
+  // Simple markdown to HTML renderer
+  const renderMarkdown = (text: string): string => {
+    if (!text) return '';
+    
+    return text
+      // Headers
+      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold mt-3 mb-2">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold">$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
+      // Lists
+      .replace(/^- (.+)$/gm, '<li class="ml-4">• $1</li>')
+      // Line breaks
+      .replace(/\n/g, '<br />');
+  };
 
   if (loading) {
     return <SkeletonDetails />;
@@ -384,16 +423,87 @@ export default function Details() {
 
               {/* Notes */}
               <div className="space-y-2">
-                <label htmlFor="notes-textarea" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Personal Notes</label>
-                <textarea
-                  id="notes-textarea"
-                  name="notes"
-                  className="flex min-h-[120px] w-full border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none font-sans"
-                  placeholder="Write your thoughts about this series..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  aria-label="Personal notes"
-                />
+                <div className="flex items-center justify-between">
+                  <label htmlFor="notes-textarea" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Personal Notes
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {notes.length} characters
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowNotesPreview(!showNotesPreview)}
+                      className="h-7 px-2 gap-1"
+                    >
+                      {showNotesPreview ? (
+                        <><Edit className="w-3 h-3" /> Edit</>
+                      ) : (
+                        <><Eye className="w-3 h-3" /> Preview</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {!showNotesPreview && (
+                  <>
+                    {/* Formatting Toolbar */}
+                    <div className="flex items-center gap-1 p-1 bg-secondary/20 border border-border/50 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting('**', '**')}
+                        className="p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
+                        title="Bold"
+                      >
+                        <Bold className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting('*', '*')}
+                        className="p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
+                        title="Italic"
+                      >
+                        <Italic className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting('## ', '')}
+                        className="p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
+                        title="Heading"
+                      >
+                        <Heading className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting('- ', '')}
+                        className="p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
+                        title="List"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1" />
+                      <span className="text-xs text-muted-foreground px-2">Markdown supported</span>
+                    </div>
+                    
+                    <textarea
+                      id="notes-textarea"
+                      name="notes"
+                      className="flex min-h-[200px] w-full border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none font-mono"
+                      placeholder="Write your thoughts...\n\nMarkdown tips:\n**bold** *italic*\n## Heading\n- List item"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      aria-label="Personal notes"
+                    />
+                  </>
+                )}
+                
+                {showNotesPreview && (
+                  <div 
+                    className="min-h-[200px] w-full border border-input bg-background px-3 py-2 text-sm rounded-lg"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(notes) || '<p class="text-muted-foreground">No notes yet. Switch to edit mode to add your thoughts.</p>' }}
+                  />
+                )}
               </div>
 
               {/* Save Button */}

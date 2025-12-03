@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getLibrary, getRecentlyUpdated, removeFromLibrary, updateProgress } from '../services/store';
 import { LibraryItem, ReadingStatus } from '../types';
 import { Card, Badge, cn, Button } from '../components/Common';
-import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X } from 'lucide-react';
+import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X, Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
 
 export default function Library() {
@@ -17,6 +17,14 @@ export default function Library() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<ReadingStatus>(ReadingStatus.READING);
+  
+  // Advanced filters state
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'title' | 'added' | 'updated' | 'rating'>('updated');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [ratingMin, setRatingMin] = useState(0);
+  const [ratingMax, setRatingMax] = useState(10);
+  const [dateFilter, setDateFilter] = useState<'all' | 'week' | 'month' | 'year'>('all');
 
   useEffect(() => {
     let mounted = true;
@@ -114,9 +122,51 @@ export default function Library() {
     }
   };
 
-  const filteredItems = items.filter(item => 
-    filter === 'ALL' ? true : item.progress?.status === filter
-  );
+  // Apply filters and sorting
+  const filteredItems = items
+    .filter(item => {
+      // Status filter
+      if (filter !== 'ALL' && item.progress?.status !== filter) return false;
+      
+      // Rating filter
+      const rating = item.progress?.rating || 0;
+      if (rating < ratingMin || rating > ratingMax) return false;
+      
+      // Date filter
+      if (dateFilter !== 'all') {
+        const now = new Date();
+        const itemDate = new Date(item.created_at);
+        const daysAgo = (now.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24);
+        
+        if (dateFilter === 'week' && daysAgo > 7) return false;
+        if (dateFilter === 'month' && daysAgo > 30) return false;
+        if (dateFilter === 'year' && daysAgo > 365) return false;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      let compareResult = 0;
+      
+      switch (sortBy) {
+        case 'title':
+          compareResult = a.title.localeCompare(b.title);
+          break;
+        case 'added':
+          compareResult = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'updated':
+          const aTime = a.progress?.updated_at ? new Date(a.progress.updated_at).getTime() : 0;
+          const bTime = b.progress?.updated_at ? new Date(b.progress.updated_at).getTime() : 0;
+          compareResult = aTime - bTime;
+          break;
+        case 'rating':
+          compareResult = (a.progress?.rating || 0) - (b.progress?.rating || 0);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? compareResult : -compareResult;
+    });
 
   const stats = {
     total: items.length,
@@ -280,21 +330,129 @@ export default function Library() {
       {/* Main Library List */}
       <div className="space-y-6">
         {/* Filter Bar */}
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 no-scrollbar">
-          {['ALL', ...Object.values(ReadingStatus)].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={cn(
-                "px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border cursor-pointer",
-                filter === status 
-                  ? "bg-primary text-primary-foreground border-primary" 
-                  : "bg-secondary/40 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
-              )}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 overflow-x-auto pb-2 no-scrollbar flex-1">
+              {['ALL', ...Object.values(ReadingStatus)].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border cursor-pointer",
+                    filter === status 
+                      ? "bg-primary text-primary-foreground border-primary" 
+                      : "bg-secondary/40 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  {status === 'ALL' ? 'All Titles' : status}
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2 cursor-pointer shrink-0"
             >
-              {status === 'ALL' ? 'All Titles' : status}
-            </button>
-          ))}
+              <SlidersHorizontal className="w-4 h-4" />
+              {showFilters ? 'Hide Filters' : 'More Filters'}
+            </Button>
+          </div>
+          
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="p-4 bg-secondary/20 border border-border/50 rounded-lg space-y-4 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Sort Options */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sort By</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="flex-1 px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="updated">Last Updated</option>
+                      <option value="added">Date Added</option>
+                      <option value="title">Title</option>
+                      <option value="rating">Rating</option>
+                    </select>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-3 py-2 bg-background border border-input rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                      title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Rating Range */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Rating {ratingMin}-{ratingMax}
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={ratingMin}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setRatingMin(Math.min(val, ratingMax));
+                      }}
+                      className="flex-1 h-2 bg-secondary appearance-none cursor-pointer accent-primary rounded-full"
+                    />
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={ratingMax}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setRatingMax(Math.max(val, ratingMin));
+                      }}
+                      className="flex-1 h-2 bg-secondary appearance-none cursor-pointer accent-primary rounded-full"
+                    />
+                  </div>
+                </div>
+                
+                {/* Date Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Added</label>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Reset Filters */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRatingMin(0);
+                    setRatingMax(10);
+                    setDateFilter('all');
+                    setSortBy('updated');
+                    setSortOrder('desc');
+                  }}
+                  className="cursor-pointer"
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Grid */}

@@ -49,9 +49,15 @@ export function buildOptimizedCoverUrl(
     path = match ? match[1] : coverUrl;
   } else if (coverUrl.startsWith('/covers/')) {
     path = coverUrl.replace('/covers/', '');
-  } else if (coverUrl.startsWith('/api/cover/')) {
-    // URL already includes /api/cover/, extract just the path
-    path = coverUrl.replace('/api/cover/', '');
+  } else if (coverUrl.includes('/api/cover/')) {
+    // URL includes /api/cover/, extract just the path after it
+    // Handle multiple instances (e.g., /api/cover//api/cover/)
+    const match = coverUrl.match(/\/api\/cover\/(.+)$/);
+    path = match ? match[1] : coverUrl;
+    // Remove any remaining /api/cover/ prefixes from the path
+    while (path.startsWith('/api/cover/')) {
+      path = path.replace('/api/cover/', '');
+    }
   }
 
   // Build query params for optimization hints

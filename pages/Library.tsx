@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getLibrary, getRecentlyUpdated } from '../services/store';
+import { getLibrary, getRecentlyUpdated, removeFromLibrary, updateProgress } from '../services/store';
 import { LibraryItem, ReadingStatus } from '../types';
-import { Card, Badge, cn } from '../components/Common';
-import { BookOpen, Star, Clock } from 'lucide-react';
+import { Card, Badge, cn, Button } from '../components/Common';
+import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X } from 'lucide-react';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
 
 export default function Library() {
@@ -11,6 +11,12 @@ export default function Library() {
   const [recentItems, setRecentItems] = useState<LibraryItem[]>([]);
   const [filter, setFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
+  
+  // Batch operations state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState<ReadingStatus>(ReadingStatus.READING);
 
   useEffect(() => {
     let mounted = true;
@@ -35,6 +41,78 @@ export default function Library() {
       mounted = false;
     };
   }, []);
+  
+  // Batch operation handlers
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedIds(new Set()); // Clear selections when toggling
+  };
+  
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+  
+  const selectAll = () => {
+    setSelectedIds(new Set(filteredItems.map(item => item.id)));
+  };
+  
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+  
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0 || !confirm(`Delete ${selectedIds.size} item(s)?`)) return;
+    
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(id => removeFromLibrary(id))
+      );
+      
+      // Refresh library
+      const libData = await getLibrary();
+      setItems(libData);
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+    } catch (error) {
+      console.error('Error deleting items:', error);
+      alert('Failed to delete some items');
+    }
+  };
+  
+  const handleBulkStatusChange = async () => {
+    if (selectedIds.size === 0) return;
+    
+    try {
+      const selectedItems = items.filter(item => selectedIds.has(item.id));
+      
+      await Promise.all(
+        selectedItems.map(item =>
+          updateProgress(item.id, {
+            status: bulkStatus,
+            last_chapter: item.progress?.last_chapter || 0,
+            rating: item.progress?.rating || 0,
+            notes: item.progress?.notes || ''
+          })
+        )
+      );
+      
+      // Refresh library
+      const libData = await getLibrary();
+      setItems(libData);
+      setSelectedIds(new Set());
+      setShowBulkStatusModal(false);
+      setSelectionMode(false);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update some items');
+    }
+  };
 
   const filteredItems = items.filter(item => 
     filter === 'ALL' ? true : item.progress?.status === filter

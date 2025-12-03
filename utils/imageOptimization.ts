@@ -50,13 +50,12 @@ export function buildOptimizedCoverUrl(
   } else if (coverUrl.startsWith('/covers/')) {
     path = coverUrl.replace('/covers/', '');
   } else if (coverUrl.includes('/api/cover/')) {
-    // URL includes /api/cover/, extract just the path after it
-    // Handle multiple instances (e.g., /api/cover//api/cover/)
-    const match = coverUrl.match(/\/api\/cover\/(.+)$/);
-    path = match ? match[1] : coverUrl;
-    // Remove any remaining /api/cover/ prefixes from the path
-    while (path.startsWith('/api/cover/')) {
-      path = path.replace('/api/cover/', '');
+    // URL includes /api/cover/, extract just the path after the LAST occurrence
+    const lastIndex = coverUrl.lastIndexOf('/api/cover/');
+    if (lastIndex !== -1) {
+      path = coverUrl.substring(lastIndex + '/api/cover/'.length);
+    } else {
+      path = coverUrl;
     }
   }
 

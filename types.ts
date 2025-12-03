@@ -62,3 +62,38 @@ export interface UserStats {
   completionRate: number;
   daysActive: number;
 }
+
+export type GoalType = 'monthly' | 'yearly' | 'custom';
+export type TargetType = 'manhwa_count' | 'chapter_count';
+
+export interface ReadingGoal {
+  id: string;
+  user_id: string;
+  goal_type: GoalType;
+  target_type: TargetType;
+  target_value: number;
+  current_value: number;
+  start_date: string;
+  end_date: string;
+  completed: boolean;
+  created_at: string;
+}
+
+export interface Achievement {
+  id: string;
+  user_id: string;
+  achievement_type: string;
+  title: string;
+  description: string;
+  unlocked_at: string;
+  icon: string;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  dailyReminder: boolean;
+  reminderTime: string; // HH:mm format
+  streakReminders: boolean;
+  goalMilestones: boolean;
+  continueReadingSuggestions: boolean;
+}

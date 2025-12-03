@@ -1,4 +1,4 @@
-import { Manhwa, ReadingStatus, UserProgress, LibraryItem, UserProfile, UserStats } from '../types';
+import { Manhwa, ReadingStatus, UserProgress, LibraryItem, UserProfile, UserStats, ReadingGoal, Achievement, GoalType, TargetType } from '../types';
 import { supabase } from './supabase';
 
 // Replace uploads.mangadex.org cover URLs with our proxy in production
@@ -549,4 +549,236 @@ export const updateUserPassword = async (currentPassword: string, newPassword: s
     console.error('Error updating password:', error);
     return { success: false, error: error.message || 'Failed to update password' };
   }
+};
+
+// Reading Goals Functions
+
+export const getReadingGoals = async (): Promise<ReadingGoal[]> => {
+  try {
+    const userId = await getUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+      .from('reading_goals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching goals:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getReadingGoals:', error);
+    return [];
+  }
+};
+
+export const createReadingGoal = async (goal: Omit<ReadingGoal, 'id' | 'user_id' | 'current_value' | 'completed' | 'created_at'>): Promise<ReadingGoal | null> => {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('reading_goals')
+      .insert({
+        user_id: userId,
+        goal_type: goal.goal_type,
+        target_type: goal.target_type,
+        target_value: goal.target_value,
+        start_date: goal.start_date,
+        end_date: goal.end_date
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating goal:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in createReadingGoal:', error);
+    return null;
+  }
+};
+
+export const updateGoalProgress = async (goalId: string, currentValue: number, completed: boolean = false): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('reading_goals')
+      .update({ current_value: currentValue, completed })
+      .eq('id', goalId);
+
+    if (error) {
+      console.error('Error updating goal progress:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in updateGoalProgress:', error);
+    return false;
+  }
+};
+
+export const deleteReadingGoal = async (goalId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('reading_goals')
+      .delete()
+      .eq('id', goalId);
+
+    if (error) {
+      console.error('Error deleting goal:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteReadingGoal:', error);
+    return false;
+  }
+};
+
+// Calculate current progress for a goal based on library data
+export const calculateGoalProgress = async (goal: ReadingGoal): Promise<number> => {
+  try {
+    const library = await getLibrary();
+    const startDate = new Date(goal.start_date);
+    const endDate = new Date(goal.end_date);
+
+    if (goal.target_type === 'manhwa_count') {
+      // Count manhwa added within the goal period
+      return library.filter(item => {
+        const createdAt = new Date(item.created_at);
+        return createdAt >= startDate && createdAt <= endDate;
+      }).length;
+    } else {
+      // Count chapters read within the goal period
+      return library.reduce((sum, item) => {
+        if (item.progress) {
+          const updatedAt = new Date(item.progress.updated_at);
+          if (updatedAt >= startDate && updatedAt <= endDate) {
+            return sum + item.progress.last_chapter;
+          }
+        }
+        return sum;
+      }, 0);
+    }
+  } catch (error) {
+    console.error('Error calculating goal progress:', error);
+    return 0;
+  }
+};
+
+// Achievements Functions
+
+export const getAchievements = async (): Promise<Achievement[]> => {
+  try {
+    const userId = await getUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+      .from('achievements')
+      .select('*')
+      .eq('user_id', userId)
+      .order('unlocked_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching achievements:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAchievements:', error);
+    return [];
+  }
+};
+
+export const unlockAchievement = async (achievement: Omit<Achievement, 'id' | 'user_id' | 'unlocked_at'>): Promise<Achievement | null> => {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error('User not authenticated');
+
+    // Check if achievement already exists
+    const { data: existing } = await supabase
+      .from('achievements')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('achievement_type', achievement.achievement_type)
+      .maybeSingle();
+
+    if (existing) {
+      return null; // Already unlocked
+    }
+
+    const { data, error } = await supabase
+      .from('achievements')
+      .insert({
+        user_id: userId,
+        achievement_type: achievement.achievement_type,
+        title: achievement.title,
+        description: achievement.description,
+        icon: achievement.icon
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error unlocking achievement:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in unlockAchievement:', error);
+    return null;
+  }
+};
+
+// Check and unlock achievements based on current stats
+export const checkAchievements = async (): Promise<Achievement[]> => {
+  const newAchievements: Achievement[] = [];
+  
+  try {
+    const stats = await getUserStatistics();
+    const library = await getLibrary();
+    
+    // Define achievement conditions
+    const achievementChecks = [
+      { type: 'first_manhwa', condition: stats.totalManhwa >= 1, title: 'First Steps', description: 'Added your first manhwa', icon: '📚' },
+      { type: 'manhwa_10', condition: stats.totalManhwa >= 10, title: 'Collector', description: 'Added 10 manhwa to your library', icon: '📖' },
+      { type: 'manhwa_50', condition: stats.totalManhwa >= 50, title: 'Enthusiast', description: 'Added 50 manhwa to your library', icon: '🌟' },
+      { type: 'manhwa_100', condition: stats.totalManhwa >= 100, title: 'Devotee', description: 'Added 100 manhwa to your library', icon: '🏆' },
+      { type: 'chapters_100', condition: stats.totalChapters >= 100, title: 'Chapter Hunter', description: 'Read 100 chapters', icon: '📜' },
+      { type: 'chapters_500', condition: stats.totalChapters >= 500, title: 'Marathon Reader', description: 'Read 500 chapters', icon: '🔥' },
+      { type: 'chapters_1000', condition: stats.totalChapters >= 1000, title: 'Legendary Reader', description: 'Read 1000 chapters', icon: '👑' },
+      { type: 'perfect_10', condition: library.some(item => item.progress?.rating === 10), title: 'Perfectionist', description: 'Gave a perfect 10 rating', icon: '⭐' },
+      { type: 'completed_10', condition: stats.completed >= 10, title: 'Finisher', description: 'Completed 10 manhwa', icon: '✅' },
+    ];
+    
+    for (const check of achievementChecks) {
+      if (check.condition) {
+        const achievement = await unlockAchievement({
+          achievement_type: check.type,
+          title: check.title,
+          description: check.description,
+          icon: check.icon
+        });
+        
+        if (achievement) {
+          newAchievements.push(achievement);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error checking achievements:', error);
+  }
+  
+  return newAchievements;
 };

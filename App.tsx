@@ -4,13 +4,14 @@ import Library from './pages/Library';
 import Search from './pages/Search';
 import Details from './pages/Details';
 import Account from './pages/Account';
+import Goals from './pages/Goals';
 import AuthModal from './components/AuthModal';
 import SignOutDialog from './components/SignOutDialog';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ErrorFallback } from './components/ErrorFallback';
 import { OfflineBanner, ReconnectionToast } from './components/OfflineBanner';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { LayoutGrid, Search as SearchIcon, Sun, Moon, AlertTriangle, UserCircle } from 'lucide-react';
+import { LayoutGrid, Search as SearchIcon, Sun, Moon, AlertTriangle, UserCircle, Target } from 'lucide-react';
 import { cn, Button } from './components/Common';
 import { supabase } from './services/supabase';
 import { SessionTimeout } from './utils/sessionTimeout';
@@ -128,6 +129,7 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
             <nav className="flex items-center gap-4 h-full">
               <NavItem to="/library" icon={LayoutGrid} label="Library" />
               <NavItem to="/search" icon={SearchIcon} label="Browse" />
+              <NavItem to="/goals" icon={Target} label="Goals" />
               <NavItem to="/account" icon={UserCircle} label="Account" />
             </nav>
             <div className="h-6 w-px bg-border/50"></div>
@@ -178,6 +180,7 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
         <div className="flex items-center justify-around h-16">
           <MobileNavItem to="/library" icon={LayoutGrid} label="Library" />
           <MobileNavItem to="/search" icon={SearchIcon} label="Browse" />
+          <MobileNavItem to="/goals" icon={Target} label="Goals" />
           <MobileNavItem to="/account" icon={UserCircle} label="Account" />
         </div>
       </nav>
@@ -315,6 +318,7 @@ export default function App() {
               <Route path="/" element={<Library />} />
               <Route path="/library" element={<Library />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/goals" element={<Goals />} />
               <Route path="/manhwa/:id" element={<Details />} />
               <Route path="/account" element={<Account />} />
             </Routes>

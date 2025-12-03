@@ -31,7 +31,7 @@ function NavItem({ to, icon: Icon, label }: { to: string, icon: any, label: stri
           : "border-transparent text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className={cn("w-4 h-4", isActive && "fill-current")} />
+      <Icon className="w-4 h-4" strokeWidth={isActive ? 2.5 : 2} />
       <span>{label}</span>
     </Link>
   );
@@ -52,7 +52,7 @@ function MobileNavItem({ to, icon: Icon, label }: { to: string, icon: any, label
           : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className={cn("w-6 h-6", isActive && "fill-current")} />
+      <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
       <span className="text-xs font-medium">{label}</span>
     </Link>
   );

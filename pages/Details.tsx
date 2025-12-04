@@ -541,23 +541,45 @@ export default function Details() {
               </div>
             </>
           ) : (
-            <div className="p-6 bg-secondary/20 border border-border/50 rounded-lg text-center">
-              <p className="text-muted-foreground mb-4">
-                Add this manhwa to your library to track your reading progress.
-              </p>
-              <Button 
-                size="lg"
-                onClick={handleAddToLibrary}
-                disabled={addingToLibrary}
-                className="font-bold"
-              >
-                {addingToLibrary ? (
-                  <><Clock className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
-                ) : (
-                  <><Plus className="w-4 h-4 mr-2" /> Add to Library</>
-                )}
-              </Button>
-            </div>
+            <>
+              <div className="h-px bg-border/50" />
+              
+              {/* Chapter Info for Non-Library Items */}
+              {totalChapters !== null && (
+                <Card className="p-6 bg-secondary/20 border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-primary/10 rounded-full">
+                        <BookOpen className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Chapters</div>
+                        <div className="text-3xl font-heading font-bold text-foreground">{totalChapters}</div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+              
+              {/* Add to Library Section */}
+              <div className="p-6 bg-secondary/20 border border-border/50 rounded-lg text-center">
+                <p className="text-muted-foreground mb-4">
+                  Add this manhwa to your library to track your reading progress.
+                </p>
+                <Button 
+                  size="lg"
+                  onClick={handleAddToLibrary}
+                  disabled={addingToLibrary}
+                  className="font-bold cursor-pointer"
+                >
+                  {addingToLibrary ? (
+                    <><Clock className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
+                  ) : (
+                    <><Plus className="w-4 h-4 mr-2" /> Add to Library</>
+                  )}
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -81,7 +81,7 @@ export default function Library() {
     
     try {
       await Promise.all(
-        Array.from(selectedIds).map(id => removeFromLibrary(id))
+        Array.from(selectedIds).map((id: string) => removeFromLibrary(id))
       );
       
       // Refresh library
@@ -307,6 +307,7 @@ export default function Library() {
 
       {/* Main Library List */}
       <div className="space-y-6">
+        <>
         {/* Filter Bar */}
         <div className="space-y-3 md:space-y-4">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
@@ -461,6 +462,7 @@ export default function Library() {
           )}
         </div>
 
+        {/* Grid View */}
         {/* Grid View */}
         {viewMode === 'grid' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
@@ -671,6 +673,7 @@ export default function Library() {
           )}
         </div>
         )}
+        </>
       </div>
       
       {/* Bulk Status Change Modal */}

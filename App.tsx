@@ -118,9 +118,9 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
              <img 
-               src={isDark ? "/logo-dark.png" : "/logo-light.png"} 
+               src="/logo/Light Mode.svg" 
                alt="doofTrack Logo" 
-               className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+               className="h-10 w-10 object-contain group-hover:scale-105 transition-transform duration-300"
              />
              <span className="font-heading font-bold text-xl tracking-tighter">dooF<span className="text-primary">-_-</span>Track</span>
           </Link>
@@ -144,9 +144,9 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
         <div className="container mx-auto px-4 h-14 flex items-center justify-center">
           <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
             <img 
-              src={isDark ? "/logo-dark.png" : "/logo-light.png"} 
+              src="/logo/Light Mode.svg" 
               alt="doofTrack Logo" 
-              className="h-8 w-auto object-contain"
+              className="h-8 w-8 object-contain"
             />
             <span className="font-heading font-bold text-lg tracking-tighter">dooF<span className="text-primary">-_-</span>Track</span>
           </Link>

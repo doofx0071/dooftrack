@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getLibrary, getRecentlyUpdated, removeFromLibrary, updateProgress } from '../services/store';
 import { LibraryItem, ReadingStatus } from '../types';
 import { Card, Badge, cn, Button } from '../components/Common';
-import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X, Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { BookOpen, Star, Clock, CheckSquare, Square, Trash2, Edit3, X, Filter, SlidersHorizontal, ChevronDown, Grid3x3, List } from 'lucide-react';
 import { buildOptimizedCoverUrl, IMAGE_PRESETS, buildSrcSet, RESPONSIVE_SIZES } from '../utils/imageOptimization';
 import Loader from '../components/Loader';
 
@@ -26,6 +26,7 @@ export default function Library() {
   const [ratingMin, setRatingMin] = useState(0);
   const [ratingMax, setRatingMax] = useState(10);
   const [dateFilter, setDateFilter] = useState<'all' | 'week' | 'month' | 'year'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     let mounted = true;
@@ -307,15 +308,15 @@ export default function Library() {
       {/* Main Library List */}
       <div className="space-y-6">
         {/* Filter Bar */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 overflow-x-auto pb-2 no-scrollbar flex-1">
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 no-scrollbar flex-1 w-full md:w-auto">
               {['ALL', ...Object.values(ReadingStatus)].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilter(status)}
                   className={cn(
-                    "px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border cursor-pointer",
+                    "px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium whitespace-nowrap transition-colors border cursor-pointer rounded-md",
                     filter === status 
                       ? "bg-primary text-primary-foreground border-primary" 
                       : "bg-secondary/40 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground"
@@ -325,15 +326,43 @@ export default function Library() {
                 </button>
               ))}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2 cursor-pointer shrink-0"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'More Filters'}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-between md:justify-start">
+              <div className="flex items-center gap-1 bg-secondary/30 border border-border/50 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={cn(
+                    "p-2 rounded transition-colors cursor-pointer hover:bg-secondary/50",
+                    viewMode === 'grid'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  title="Grid View"
+                >
+                  <Grid3x3 className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    "p-2 rounded transition-colors cursor-pointer hover:bg-secondary/50",
+                    viewMode === 'list'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  title="List View"
+                >
+                  <List className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="gap-2 cursor-pointer text-xs md:text-sm"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="hidden sm:inline">{showFilters ? 'Hide Filters' : 'Filters'}</span>
+              </Button>
+            </div>
           </div>
           
           {/* Advanced Filters */}
@@ -432,8 +461,9 @@ export default function Library() {
           )}
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        {/* Grid View */}
+        {viewMode === 'grid' && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           {filteredItems.map((item) => {
             const isSelected = selectedIds.has(item.id);
             const cardContent = (
@@ -531,6 +561,116 @@ export default function Library() {
             </div>
           )}
         </div>
+        )}
+
+        {/* List View */}
+        {viewMode === 'list' && (
+        <div className="space-y-2">
+          {filteredItems.map((item) => {
+            const isSelected = selectedIds.has(item.id);
+            const listContent = (
+              <Card className={cn(
+                "overflow-hidden border-border/50 bg-card/40 transition-all flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4",
+                !selectionMode && "hover:bg-card/80 hover:shadow-lg",
+                selectionMode && "cursor-pointer",
+                isSelected && "ring-2 ring-primary"
+              )}>
+                {/* Thumbnail */}
+                <div className="shrink-0 w-16 h-24 sm:w-24 sm:h-32 relative overflow-hidden border border-border/50">
+                  <img
+                    src={buildOptimizedCoverUrl(item.cover_url, IMAGE_PRESETS.thumbnail)}
+                    srcSet={buildSrcSet(item.cover_url, [128, 256], 80)}
+                    sizes="96px"
+                    alt={item.title}
+                    className="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
+                    width="96"
+                    height="128"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"%3E%3Crect width="400" height="600" fill="%23374151"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239CA3AF" font-family="system-ui" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className={cn(
+                    "font-semibold text-sm sm:text-base line-clamp-1 sm:line-clamp-2 font-heading transition-colors",
+                    !selectionMode && "group-hover:text-primary"
+                  )}>
+                    {item.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-1">
+                    {item.author || 'Unknown Author'}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-3">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
+                      <span className="text-xs font-medium">{item.rating || 'N/A'}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      Ch. {item.progress?.last_chapter || 0}{item.lastChapter ? `/${item.lastChapter}` : ''}
+                    </Badge>
+                    {item.progress?.status && (
+                      <Badge className={cn(
+                        "text-xs",
+                        item.progress.status === ReadingStatus.READING && "bg-indigo-600",
+                        item.progress.status === ReadingStatus.COMPLETED && "bg-green-600"
+                      )}>
+                        {item.progress.status}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Checkbox in selection mode */}
+                {selectionMode && (
+                  <div className="shrink-0">
+                    <div className={cn(
+                      "w-6 h-6 rounded flex items-center justify-center border-2 transition-colors",
+                      isSelected 
+                        ? "bg-primary border-primary" 
+                        : "bg-background border-input"
+                    )}>
+                      {isSelected && <CheckSquare className="w-4 h-4 text-primary-foreground" />}
+                      {!isSelected && <Square className="w-4 h-4" />}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            );
+
+            return selectionMode ? (
+              <div
+                key={item.id}
+                onClick={() => toggleSelect(item.id)}
+                className="cursor-pointer"
+              >
+                {listContent}
+              </div>
+            ) : (
+              <Link to={`/manhwa/${item.id}`} key={item.id} className="group cursor-pointer">
+                {listContent}
+              </Link>
+            );
+          })}
+          {filteredItems.length === 0 && (
+            <div className="py-20 text-center border-2 border-dashed border-border/50 bg-secondary/10 rounded-lg">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+              <h3 className="text-lg font-heading font-medium">No manhwa found</h3>
+              <p className="text-muted-foreground mb-4">You haven't added any titles with this status yet.</p>
+              <Link to="/search">
+                <button className="bg-primary text-primary-foreground px-4 py-2 hover:bg-primary/90 font-medium cursor-pointer">
+                  Browse MangaDex
+                </button>
+              </Link>
+            </div>
+          )}
+        </div>
+        )}
       </div>
       
       {/* Bulk Status Change Modal */}

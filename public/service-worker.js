@@ -11,8 +11,6 @@ const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo-dark.png',
-  '/logo-light.png',
 ];
 
 // Install event - precache static assets
@@ -56,6 +54,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Skip caching for chrome-extension and other non-http schemes
+  if (!url.protocol.startsWith('http')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Strategy 1: Cover Images - Stale While Revalidate
   // Serve from cache, update in background

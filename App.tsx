@@ -118,7 +118,7 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
              <img 
-               src="/logo/Light Mode.svg" 
+               src="/logo/light-mode.svg" 
                alt="doofTrack Logo" 
                className="h-10 w-10 object-contain group-hover:scale-105 transition-transform duration-300"
              />
@@ -144,7 +144,7 @@ function Layout({ children, user, onSignOut }: { children?: React.ReactNode, use
         <div className="container mx-auto px-4 h-14 flex items-center justify-center">
           <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
             <img 
-              src="/logo/Light Mode.svg" 
+              src="/logo/light-mode.svg" 
               alt="doofTrack Logo" 
               className="h-8 w-8 object-contain"
             />

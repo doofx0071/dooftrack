@@ -1,192 +1,23 @@
-import React from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Library from './pages/Library';
-import Search from './pages/Search';
-import Details from './pages/Details';
-import Account from './pages/Account';
-import Goals from './pages/Goals';
-import AuthModal from './components/AuthModal';
-import SignOutDialog from './components/SignOutDialog';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { ErrorFallback } from './components/ErrorFallback';
-import { OfflineBanner, ReconnectionToast } from './components/OfflineBanner';
-import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { LayoutGrid, Search as SearchIcon, Sun, Moon, AlertTriangle, UserCircle, Target } from 'lucide-react';
-import { cn, Button } from './components/Common';
+import React, { Suspense, lazy } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './services/supabase';
 import { SessionTimeout } from './utils/sessionTimeout';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { AppLayout } from './components/AppLayout';
+import AuthModal from './components/AuthModal';
+import { OfflineBanner, ReconnectionToast } from './components/OfflineBanner';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorFallback } from './components/ErrorFallback';
+import { Button } from './components/Common';
+import { AlertTriangle } from 'lucide-react';
+import Loader from './components/Loader';
 
-// Desktop navigation item
-function NavItem({ to, icon: Icon, label }: { to: string, icon: any, label: string }) {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-  
-  return (
-    <Link 
-      to={to} 
-      className={cn(
-        "flex items-center gap-2 px-4 py-2 transition-all duration-300 border-b-2 text-base font-medium cursor-pointer rounded-t",
-        isActive 
-          ? "border-primary text-primary bg-primary/10" 
-          : "border-transparent text-muted-foreground hover:text-foreground"
-      )}
-    >
-      <Icon className="w-4 h-4" strokeWidth={isActive ? 2.5 : 2} />
-      <span>{label}</span>
-    </Link>
-  );
-}
-
-// Mobile bottom navigation item
-function MobileNavItem({ to, icon: Icon, label }: { to: string, icon: any, label: string }) {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-  
-  return (
-    <Link 
-      to={to} 
-      className={cn(
-        "flex flex-col items-center justify-center gap-1 py-2 px-4 transition-all duration-300 cursor-pointer",
-        isActive 
-          ? "text-primary" 
-          : "text-muted-foreground hover:text-foreground"
-      )}
-    >
-      <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
-      <span className="text-xs font-medium">{label}</span>
-    </Link>
-  );
-}
-
-function ThemeToggle() {
-  const [isDark, setIsDark] = React.useState(true);
-
-  React.useEffect(() => {
-    // Sync with initial HTML state
-    setIsDark(document.documentElement.classList.contains('dark'));
-  }, []);
-
-  const toggleTheme = () => {
-    const html = document.documentElement;
-    if (html.classList.contains('dark')) {
-      html.classList.remove('dark');
-      setIsDark(false);
-    } else {
-      html.classList.add('dark');
-      setIsDark(true);
-    }
-  };
-
-  return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={toggleTheme} 
-      className="ml-1 md:ml-2 hover:bg-secondary transition-colors cursor-pointer"
-      title="Toggle Theme"
-    >
-      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-    </Button>
-  );
-}
-
-function Layout({ children, user, onSignOut }: { children?: React.ReactNode, user?: any, onSignOut?: () => void }) {
-  const [isDark, setIsDark] = React.useState(true);
-
-  React.useEffect(() => {
-    // Sync with initial HTML state
-    const checkTheme = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
-    
-    checkTheme();
-    
-    // Watch for theme changes
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col transition-colors duration-300">
-      {/* Desktop Header - hidden on mobile */}
-      <header className="hidden md:block sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
-             <img 
-               src={isDark ? "/logo/dark-mode.svg" : "/logo/light-mode-transparent.svg"} 
-               alt="doofTrack Logo" 
-               className="h-10 w-10 object-contain group-hover:scale-105 transition-transform duration-300"
-             />
-             <span className="font-heading font-bold text-xl tracking-tighter">dooF<span className="text-primary">-_-</span>Track</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <nav className="flex items-center gap-4 h-full">
-              <NavItem to="/library" icon={LayoutGrid} label="Library" />
-              <NavItem to="/search" icon={SearchIcon} label="Browse" />
-              <NavItem to="/goals" icon={Target} label="Goals" />
-              <NavItem to="/account" icon={UserCircle} label="Account" />
-            </nav>
-            <div className="h-6 w-px bg-border/50"></div>
-            <ThemeToggle />
-            {user && onSignOut && <SignOutDialog onConfirm={onSignOut} />}
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Header - only logo */}
-      <header className="md:hidden sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-center">
-          <Link to="/library" className="flex items-center gap-2 tracking-tight group cursor-pointer">
-            <img 
-              src={isDark ? "/logo/dark-mode.svg" : "/logo/light-mode-transparent.svg"} 
-              alt="doofTrack Logo" 
-              className="h-8 w-8 object-contain"
-            />
-            <span className="font-heading font-bold text-lg tracking-tighter">dooF<span className="text-primary">-_-</span>Track</span>
-          </Link>
-        </div>
-      </header>
-      
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
-        {children}
-      </main>
-
-      {/* Desktop Footer - hidden on mobile */}
-      <footer className="hidden md:block border-t border-border/40 mt-auto">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16 text-sm text-muted-foreground">
-           <p className="font-heading font-medium">dooF<span className="text-primary">-_-</span>Track</p>
-           <p className="text-xs">
-             Powered by{' '}
-             <a 
-               href="https://api.mangadex.org/docs/" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               className="text-primary hover:underline transition-colors cursor-pointer"
-             >
-               MangaDex API
-             </a>
-           </p>
-        </div>
-      </footer>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-around h-16">
-          <MobileNavItem to="/library" icon={LayoutGrid} label="Library" />
-          <MobileNavItem to="/search" icon={SearchIcon} label="Browse" />
-          <MobileNavItem to="/goals" icon={Target} label="Goals" />
-          <MobileNavItem to="/account" icon={UserCircle} label="Account" />
-        </div>
-      </nav>
-    </div>
-  );
-}
+// Lazy load pages
+const Library = lazy(() => import('./pages/Library'));
+const Search = lazy(() => import('./pages/Search'));
+const Details = lazy(() => import('./pages/Details'));
+const Account = lazy(() => import('./pages/Account'));
+const Goals = lazy(() => import('./pages/Goals'));
 
 export default function App() {
   const [user, setUser] = React.useState<any>(null);
@@ -211,16 +42,13 @@ export default function App() {
       if (newUser && !sessionTimeoutRef.current) {
         sessionTimeoutRef.current = new SessionTimeout(
           () => {
-            // Warning: 5 minutes until auto-logout
             setSessionWarning(true);
           },
           () => {
-            // Timeout: auto-logout inactive user
             handleSignOut();
           }
         );
       } else if (!newUser && sessionTimeoutRef.current) {
-        // Cleanup on logout
         sessionTimeoutRef.current.destroy();
         sessionTimeoutRef.current = null;
         setSessionWarning(false);
@@ -236,7 +64,6 @@ export default function App() {
   }, []);
 
   const handleSignOut = async () => {
-    // Cleanup session timeout
     if (sessionTimeoutRef.current) {
       sessionTimeoutRef.current.destroy();
       sessionTimeoutRef.current = null;
@@ -264,67 +91,67 @@ export default function App() {
   }
 
   return (
-    <>
-      {!user && <AuthModal onAuthSuccess={() => {}} />}
-      
-      {/* Offline Banner */}
-      <OfflineBanner isOffline={!isOnline} />
-      <ReconnectionToast />
-      
-      {/* Session Timeout Warning */}
-      {sessionWarning && user && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md p-6 bg-card border-2 border-yellow-500/50 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="w-8 h-8 text-yellow-500" />
-              </div>
-              <div className="flex-1 space-y-3">
-                <h2 className="text-xl font-heading font-bold text-foreground">
-                  Session About to Expire
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  You've been inactive for a while. Your session will expire in 5 minutes due to inactivity.
-                </p>
-                <div className="flex gap-3 pt-2">
-                  <Button 
-                    onClick={extendSession}
-                    className="flex-1 font-semibold cursor-pointer"
-                  >
-                    Stay Logged In
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={handleSignOut}
-                    className="flex-1 font-semibold cursor-pointer"
-                  >
-                    Sign Out Now
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
+    <Router>
       <ErrorBoundary 
         fallback={(error, errorInfo, reset) => (
           <ErrorFallback error={error} errorInfo={errorInfo} reset={reset} />
         )}
       >
-        <Router>
-          <Layout user={user} onSignOut={handleSignOut}>
-            <Routes>
-              <Route path="/" element={<Library />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/manhwa/:id" element={<Details />} />
-              <Route path="/account" element={<Account />} />
-            </Routes>
-          </Layout>
-        </Router>
+          <AppLayout user={user} onSignOut={handleSignOut}>
+             <OfflineBanner isOffline={!isOnline} />
+             <ReconnectionToast />
+             
+             {!user && <AuthModal onAuthSuccess={() => {}} />}
+
+             <Suspense fallback={<Loader />}>
+               <Routes>
+                 <Route path="/" element={<Navigate to="/library" replace />} />
+                 <Route path="/library" element={user ? <Library /> : <div className="h-[60vh] flex items-center justify-center text-muted-foreground">Please sign in to view your library</div>} />
+                 <Route path="/search" element={<Search />} />
+                 <Route path="/manhwa/:id" element={<Details />} />
+                 <Route path="/goals" element={user ? <Goals /> : <Navigate to="/" replace />} />
+                 <Route path="/account" element={user ? <Account /> : <Navigate to="/" replace />} />
+                 <Route path="*" element={<Navigate to="/library" replace />} />
+               </Routes>
+             </Suspense>
+
+             {/* Session Timeout Warning */}
+             {sessionWarning && user && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                  <div className="w-full max-w-md p-6 bg-card border-2 border-yellow-500/50 shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <AlertTriangle className="w-8 h-8 text-yellow-500" />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <h2 className="text-xl font-heading font-bold text-foreground">
+                          Session About to Expire
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          You've been inactive for a while. Your session will expire in 5 minutes due to inactivity.
+                        </p>
+                        <div className="flex gap-3 pt-2">
+                          <Button 
+                            onClick={extendSession}
+                            className="flex-1 font-semibold cursor-pointer"
+                          >
+                            Stay Logged In
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={handleSignOut}
+                            className="flex-1 font-semibold cursor-pointer"
+                          >
+                            Sign Out
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+             )}
+          </AppLayout>
       </ErrorBoundary>
-    </>
+    </Router>
   );
 }

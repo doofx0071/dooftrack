@@ -245,7 +245,7 @@ export const getLastChapterNumber = async (mangaId: string): Promise<number | nu
     let maxChapter = 0;
     
     if (data.volumes) {
-      Object.values(data.volumes).forEach((volume: any) => {
+      Object.values(data.volumes).forEach((volume: { chapters?: Record<string, unknown> }) => {
         if (volume.chapters) {
           Object.keys(volume.chapters).forEach((chapterNum: string) => {
             const num = parseFloat(chapterNum);

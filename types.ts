@@ -16,6 +16,8 @@ export interface Manhwa {
   lastChapter?: number; // Total chapters from manga metadata
 }
 
+export type ManhwaItem = Manhwa;
+
 export interface UserProgress {
   id: string;
   manhwa_id: string;
